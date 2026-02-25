@@ -1,0 +1,29 @@
+{
+  "dental_knowledge": {
+    "file_name": "train_final.json",
+    "file_sha1": "",
+    "subset": "",
+    "folder": "",
+    "ranking": false,
+    "formatting": "alpaca",
+    "prompt_template": "qwen"
+  },
+  "dental_knowledge_dev": {
+    "file_name": "dev_final.json",
+    "file_sha1": "",
+    "subset": "",
+    "folder": "",
+    "ranking": false,
+    "formatting": "alpaca",
+    "prompt_template": "qwen"
+  },
+  "dental_knowledge_test": {
+    "file_name": "test_final.json",
+    "file_sha1": "",
+    "subset": "",
+    "folder": "",
+    "ranking": false,
+    "formatting": "alpaca",
+    "prompt_template": "qwen"
+  }
+}
