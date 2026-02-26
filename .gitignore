@@ -41,3 +41,7 @@ htmlcov/
 # Temp
 tmp/
 temp/
+
+# Large files
+*.pdf
+data/口腔修复学*
