@@ -1,6 +1,7 @@
 # Qwen2.5 推理服务启动脚本（Transformers 版本）
-# 使用方法：python start_inference.py
+# 使用方法：python start_inference.py 或 python start_inference.py --port 6008 --model_path ./models/dental_qwen_merged
 
+import argparse
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from fastapi import FastAPI, HTTPException
@@ -8,10 +9,17 @@ from pydantic import BaseModel
 import uvicorn
 from typing import Optional, List
 
+# ========== 命令行参数 ==========
+parser = argparse.ArgumentParser(description='牙科修复 AI 推理服务')
+parser.add_argument('--port', type=int, default=8080, help='服务端口 (默认：8080)')
+parser.add_argument('--model_path', type=str, default='./models/dental_qwen_merged', help='模型路径')
+parser.add_argument('--host', type=str, default='0.0.0.0', help='监听地址 (默认：0.0.0.0)')
+args = parser.parse_args()
+
 # ========== 配置 ==========
-MODEL_PATH = "./models/dental_qwen_merged"  # 模型路径
-HOST = "0.0.0.0"
-PORT = 8080
+MODEL_PATH = args.model_path
+HOST = args.host
+PORT = args.port
 MAX_TOKENS = 512
 TEMPERATURE = 0.7
 

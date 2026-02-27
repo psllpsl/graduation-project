@@ -232,24 +232,23 @@ pytest tests/
 
 编辑 `.env` 文件：
 ```env
-AI_SERVICE_URL=https://uu769760-8e18-d25f4791.bjb1.seetacloud.com:8443/generate
+AI_SERVICE_URL=https://uu769760-b58d-861e482d.bjb1.seetacloud.com:8443/generate
 AI_SERVICE_TYPE=autodl
 AI_MAX_TOKENS=150
 AI_TEMPERATURE=0.7
 AI_TIMEOUT_SECONDS=60
 ```
 
+**注意**：URL 中的实例 ID 必须与你的 AutoDL 实例匹配（`uu769760-b58d-861e482d`）。
+
 ### 测试连接
 
-```bash
-python test_autodl_connection.py
-```
-
-## 许可证
-
-MIT License
+在 Swagger UI 中测试对话接口：
+1. 访问 http://localhost:8000/docs
+2. 登录获取 Token
+3. 调用 `POST /api/dialogues/` 接口
 
 ---
 
 **最后更新**: 2026 年 2 月 27 日
-**文档版本**: v1.1
+**文档版本**: v1.2

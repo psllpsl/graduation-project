@@ -21,14 +21,13 @@ data/
 ├── knowledge/
 │   └── knowledge_base_v3.json       # 知识库（804 条）✅
 ├── train/
-│   └── train.json                   # 训练集（154 条）✅
+│   └── train.json                   # 训练集（500 条）✅
 ├── scripts/
 │   ├── check_duplicates.py          # 重复检查脚本
 │   ├── deduplicate.py               # 去重脚本
 │   └── generate_datasets.py         # 数据集生成脚本
 ├── README.md                        # 本文档
 ├── 数据集构建完成报告.md             # 构建报告 ✅
-├── 知识库校对报告.md                 # 知识库校对报告 ✅
 └── 口腔修复学 - 第 8 版.pdf          # 数据源 PDF
 ```
 
