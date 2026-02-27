@@ -24,9 +24,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 小时
 
     # AI 服务配置
-    AI_SERVICE_URL: Optional[str] = None  # AI 服务地址，后续配置
-    AI_MAX_TOKENS: int = 512
+    AI_SERVICE_URL: Optional[str] = None  # AI 服务地址
+    AI_SERVICE_TYPE: str = "autodl"  # AI 服务类型：autodl / local / api
+    AI_MAX_TOKENS: int = 150
     AI_TEMPERATURE: float = 0.7
+    AI_TIMEOUT_SECONDS: int = 60  # AI 请求超时时间（秒）
 
     # Redis 配置
     REDIS_HOST: str = "localhost"

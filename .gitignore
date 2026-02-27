@@ -42,6 +42,21 @@ htmlcov/
 tmp/
 temp/
 
-# Large files
+# Large files (排除模型和大文件)
 *.pdf
 data/口腔修复学*
+
+# AI 模型文件（太大，不能上传）
+data/models/
+data/checkpoints/
+data/*.tar.gz
+data/*.bin
+data/*.safetensors
+*.pth
+*.pt
+*.onnx
+*.h5
+
+# 训练临时文件
+data/train/*.tmp
+data/knowledge/*.tmp

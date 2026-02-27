@@ -66,29 +66,13 @@ async def create_dialogue(
     - **user_message**: 用户消息
     - **message_type**: 消息类型
     """
-    # 获取会话历史（从 Redis 缓存）
-    cache_key = f"dialogue_session:{dialogue_data.session_id}"
-    session_history = cache.lrange(cache_key, 0, 9)  # 获取最近 10 条对话
-
-    # 格式化上下文
-    context = ""
-    if session_history:
-        context_parts = []
-        for msg in session_history:
-            if isinstance(msg, dict):
-                context_parts.append(f"用户：{msg.get('user_message', '')}\nAI: {msg.get('ai_response', '')}")
-        context = "\n".join(context_parts)
-
-    # 检索相关知识
+    # 生成 AI 回复（使用新的简化接口）
     ai_service = get_ai_service()
-    knowledge = ai_service.search_knowledge(db, dialogue_data.user_message)
-
-    # 生成 AI 回复
     ai_response = ai_service.generate_response(
         user_message=dialogue_data.user_message,
-        context=context,
-        knowledge=knowledge,
-        session_id=dialogue_data.session_id
+        patient_id=dialogue_data.patient_id,
+        session_id=dialogue_data.session_id,
+        db=db
     )
 
     # 创建对话记录
@@ -105,6 +89,7 @@ async def create_dialogue(
     db.refresh(dialogue)
 
     # 更新会话历史到 Redis
+    cache_key = f"dialogue_session:{dialogue_data.session_id}"
     cache.lpush(cache_key, {
         "user_message": dialogue_data.user_message,
         "ai_response": ai_response

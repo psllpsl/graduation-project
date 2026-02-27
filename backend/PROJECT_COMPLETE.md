@@ -4,12 +4,13 @@
 
 | 项目 | 状态 | 说明 |
 |------|------|------|
-| **项目版本** | v1.0 | 基础功能完成 |
+| **项目版本** | v1.2 | AI 服务集成完成 |
 | **开发语言** | Python 3.10+ | 异步框架 |
 | **Web 框架** | FastAPI 0.109.0 | 高性能 API |
 | **数据库** | MySQL 8.0+ | 7 张表 |
-| **缓存** | Redis 6.0+ | 会话管理 |
+| **缓存** | Redis 6.0+ | 会话管理（可选） |
 | **认证** | JWT | Token 认证 |
+| **AI 服务** | AutoDL RTX 4090 | ✅ 已部署已集成 |
 
 ---
 
@@ -184,9 +185,10 @@ backend/
 |------|------|------|
 | `generate_response()` | 生成 AI 回复（支持上下文/知识检索） | ✅ |
 | `search_knowledge()` | 检索相关知识（Redis 缓存） | ✅ |
-| `_build_system_prompt()` | 构建 System Prompt | ✅ |
-| `_call_llm_api()` | 调用大模型 API | ✅ |
-| `_get_default_response()` | 默认回复（关键词匹配） | ✅ |
+| `_build_system_prompt()` | 构建 System Prompt（简洁格式约束） | ✅ |
+| `_call_autodl_api()` | 调用 AutoDL 推理服务 | ✅ |
+| `_post_process_response()` | 后处理（截断/清理/移除追问） | ✅ |
+| `_get_session_context()` | 从数据库读取对话历史（最近 3 轮） | ✅ |
 
 ---
 
@@ -294,10 +296,33 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ## 📝 注意事项
 
 1. **首次运行前**需要确保 MySQL 数据库已创建并导入初始化数据
-2. **Redis 服务**需要运行以支持会话缓存功能
+2. **Redis 服务**需要运行以支持会话缓存功能（未启用时自动降级，不影响核心功能）
 3. **JWT 密钥**在生产环境中请修改为随机字符串（可使用 `openssl rand -hex 32` 生成）
 4. **AI 服务**需要配置 `AI_SERVICE_URL` 才能调用大模型
 5. **测试数据**包含 3 个用户（密码均为 `admin123`）和 5 个患者
+
+## 🤖 AI 服务部署状态
+
+**部署平台**：AutoDL 云平台（北京 1 区）
+**GPU 型号**：NVIDIA GeForce RTX 4090 24GB
+**服务地址**：`https://uu769760-8e18-d25f4791.bjb1.seetacloud.com:8443`
+**API 接口**：`POST /generate`
+**响应格式**：`{"text": "...", "model": "dental_qwen"}`
+
+**配置文件** (`backend/.env`):
+```env
+AI_SERVICE_URL=https://uu769760-8e18-d25f4791.bjb1.seetacloud.com:8443/generate
+AI_SERVICE_TYPE=autodl
+AI_MAX_TOKENS=150
+AI_TEMPERATURE=0.7
+AI_TIMEOUT_SECONDS=60
+```
+
+**测试结果**（2026-02-27）:
+- ✅ AI 服务连接正常
+- ✅ 对话记录保存到数据库
+- ✅ 多轮对话上下文正常
+- ✅ 后处理功能正常（追问已移除）
 
 ---
 
@@ -306,10 +331,12 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 | 版本 | 日期 | 更新内容 |
 |------|------|----------|
 | v1.0 | 2026-02-22 | 初始版本，完成所有基础功能 |
+| v1.1 | 2026-02-26 | 更新项目状态、代码统计 |
+| v1.2 | 2026-02-27 | AI 服务集成完成、部署状态更新 |
 
 ---
 
 **创建日期**: 2026-02-22
-**最后更新**: 2026-02-26
-**文档版本**: v1.1
-**状态**: ✅ 基础功能完成，可投入使用
+**最后更新**: 2026-02-27
+**文档版本**: v1.2
+**状态**: ✅ 后端 + AI 服务完成，可投入使用

@@ -15,13 +15,22 @@ class RedisCache:
         """
         初始化 Redis 连接
         """
-        self.redis_client = redis.Redis(
-            host=settings.REDIS_HOST,
-            port=settings.REDIS_PORT,
-            db=settings.REDIS_DB,
-            decode_responses=True,
-            socket_connect_timeout=5
-        )
+        self.enabled = False
+        try:
+            self.redis_client = redis.Redis(
+                host=settings.REDIS_HOST,
+                port=settings.REDIS_PORT,
+                db=settings.REDIS_DB,
+                decode_responses=True,
+                socket_connect_timeout=5
+            )
+            # 测试连接
+            self.redis_client.ping()
+            self.enabled = True
+            print("Redis 连接成功")
+        except Exception as e:
+            print(f"Redis 未启用（会话缓存功能将不可用，不影响核心功能）: {e}")
+            self.redis_client = None
 
     def set(self, key: str, value: Any, expire: Optional[timedelta] = None) -> bool:
         """
@@ -35,6 +44,8 @@ class RedisCache:
         Returns:
             是否成功
         """
+        if not self.enabled:
+            return False
         try:
             if isinstance(value, (dict, list)):
                 value = json.dumps(value, ensure_ascii=False)
@@ -57,6 +68,8 @@ class RedisCache:
         Returns:
             缓存值（自动 JSON 反序列化），不存在返回 None
         """
+        if not self.enabled:
+            return None
         try:
             value = self.redis_client.get(key)
             if value:
@@ -70,15 +83,9 @@ class RedisCache:
             return None
 
     def delete(self, key: str) -> bool:
-        """
-        删除缓存
-
-        Args:
-            key: 缓存键
-
-        Returns:
-            是否成功
-        """
+        """删除缓存"""
+        if not self.enabled:
+            return False
         try:
             self.redis_client.delete(key)
             return True
@@ -87,15 +94,9 @@ class RedisCache:
             return False
 
     def exists(self, key: str) -> bool:
-        """
-        检查缓存是否存在
-
-        Args:
-            key: 缓存键
-
-        Returns:
-            是否存在
-        """
+        """检查缓存是否存在"""
+        if not self.enabled:
+            return False
         try:
             return self.redis_client.exists(key) > 0
         except Exception as e:
@@ -103,16 +104,9 @@ class RedisCache:
             return False
 
     def lpush(self, key: str, value: Any) -> bool:
-        """
-        列表左侧推送（用于对话历史）
-
-        Args:
-            key: 列表键
-            value: 值
-
-        Returns:
-            是否成功
-        """
+        """列表左侧推送（用于对话历史）"""
+        if not self.enabled:
+            return False
         try:
             if isinstance(value, (dict, list)):
                 value = json.dumps(value, ensure_ascii=False)
@@ -123,17 +117,9 @@ class RedisCache:
             return False
 
     def lrange(self, key: str, start: int = 0, end: int = -1) -> list:
-        """
-        获取列表范围
-
-        Args:
-            key: 列表键
-            start: 起始索引
-            end: 结束索引（-1 表示末尾）
-
-        Returns:
-            列表数据
-        """
+        """获取列表范围"""
+        if not self.enabled:
+            return []
         try:
             values = self.redis_client.lrange(key, start, end)
             result = []
@@ -148,17 +134,9 @@ class RedisCache:
             return []
 
     def ltrim(self, key: str, start: int = 0, end: int = -1) -> bool:
-        """
-        修剪列表（保留指定范围的元素）
-
-        Args:
-            key: 列表键
-            start: 起始索引
-            end: 结束索引
-
-        Returns:
-            是否成功
-        """
+        """修剪列表"""
+        if not self.enabled:
+            return False
         try:
             self.redis_client.ltrim(key, start, end)
             return True
@@ -167,16 +145,9 @@ class RedisCache:
             return False
 
     def expire(self, key: str, seconds: int) -> bool:
-        """
-        设置过期时间
-
-        Args:
-            key: 缓存键
-            seconds: 过期秒数
-
-        Returns:
-            是否成功
-        """
+        """设置过期时间"""
+        if not self.enabled:
+            return False
         try:
             self.redis_client.expire(key, seconds)
             return True

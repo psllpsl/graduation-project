@@ -222,9 +222,28 @@ pytest tests/
 ## 注意事项
 
 1. **首次运行前**需要确保 MySQL 数据库已创建并导入初始化数据
-2. **Redis 服务**需要运行以支持会话缓存功能
+2. **Redis 服务**需要运行以支持会话缓存功能（未启用时自动降级，不影响核心功能）
 3. **JWT 密钥**在生产环境中请修改为随机字符串（可使用 `openssl rand -hex 32` 生成）
 4. **AI 服务**需要配置 `AI_SERVICE_URL` 才能调用大模型
+
+## AI 服务配置
+
+### AutoDL 部署
+
+编辑 `.env` 文件：
+```env
+AI_SERVICE_URL=https://uu769760-8e18-d25f4791.bjb1.seetacloud.com:8443/generate
+AI_SERVICE_TYPE=autodl
+AI_MAX_TOKENS=150
+AI_TEMPERATURE=0.7
+AI_TIMEOUT_SECONDS=60
+```
+
+### 测试连接
+
+```bash
+python test_autodl_connection.py
+```
 
 ## 许可证
 
@@ -232,4 +251,5 @@ MIT License
 
 ---
 
-**最后更新**: 2026 年 2 月 22 日
+**最后更新**: 2026 年 2 月 27 日
+**文档版本**: v1.1
