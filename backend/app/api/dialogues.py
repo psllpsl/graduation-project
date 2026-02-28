@@ -155,3 +155,65 @@ async def get_pending_handover_dialogues(
         Dialogue.is_handover == 1
     ).order_by(Dialogue.created_at.desc()).offset(skip).limit(limit).all()
     return dialogues
+
+
+@router.delete("/{dialogue_id}", status_code=status.HTTP_204_NO_CONTENT, summary="删除单条对话记录")
+async def delete_dialogue(
+    dialogue_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    根据 ID 删除单条对话记录
+    """
+    dialogue = db.query(Dialogue).filter(Dialogue.id == dialogue_id).first()
+    if not dialogue:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="对话记录不存在"
+        )
+    
+    db.delete(dialogue)
+    db.commit()
+    return None
+
+
+@router.delete("/session/{session_id}", status_code=status.HTTP_204_NO_CONTENT, summary="删除会话的所有对话记录")
+async def delete_session_dialogues(
+    session_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    删除指定会话的所有对话记录
+    """
+    db.query(Dialogue).filter(Dialogue.session_id == session_id).delete()
+    db.commit()
+    return None
+
+
+@router.delete("/patient/{patient_id}", status_code=status.HTTP_204_NO_CONTENT, summary="删除患者的所有对话记录")
+async def delete_patient_dialogues(
+    patient_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    删除指定患者的所有对话记录
+    """
+    db.query(Dialogue).filter(Dialogue.patient_id == patient_id).delete()
+    db.commit()
+    return None
+
+
+@router.delete("", status_code=status.HTTP_204_NO_CONTENT, summary="清空所有对话记录")
+async def delete_all_dialogues(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    清空所有对话记录（谨慎使用）
+    """
+    db.query(Dialogue).delete()
+    db.commit()
+    return None

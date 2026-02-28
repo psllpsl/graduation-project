@@ -77,14 +77,22 @@ class AIService:
                 full_prompt = f"{context}\n\n用户：{user_message}"
             else:
                 full_prompt = user_message
-            
+
             # 添加强制约束指令
             constraint = """
 （注意：回答必须简短，80 字以内，不要追问问题，不要使用标题和分点格式）"""
-            
+
+            # 确保 API URL 以 /generate 结尾
+            api_url = self.api_url
+            if not api_url.endswith("/generate"):
+                api_url = api_url.rstrip("/") + "/generate"
+
+            logger.info(f"Calling AutoDL API: {api_url}")
+            logger.info(f"Request data: prompt={full_prompt[:50]}..., max_tokens={self.max_tokens}")
+
             with httpx.Client(timeout=self.timeout, verify=False) as client:
                 response = client.post(
-                    self.api_url,
+                    api_url,
                     json={
                         "prompt": full_prompt + constraint,
                         "system_prompt": system_prompt,
@@ -92,15 +100,30 @@ class AIService:
                         "temperature": 0.5
                     }
                 )
+                
+                logger.info(f"Response status: {response.status_code}")
+                
+                if response.status_code == 404:
+                    logger.error(f"404 Error - URL may be incorrect. Current URL: {api_url}")
+                    logger.error(f"Base URL from settings: {self.api_url}")
+                
                 response.raise_for_status()
                 result = response.json()
-                
+                logger.info(f"Response JSON keys: {result.keys() if isinstance(result, dict) else 'Not a dict'}")
+
                 text = result.get("text", "")
                 if text:
                     # 后处理：截断过长回复
                     return self._post_process_response(text)
                 return self._get_fallback_response(user_message)
-                    
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP Status Error: {e}")
+            logger.error(f"Response content: {e.response.text if hasattr(e.response, 'text') else 'N/A'}")
+            return self._get_fallback_response(user_message)
+        except httpx.RequestError as e:
+            logger.error(f"Request Error: {e}")
+            return self._get_fallback_response(user_message)
         except Exception as e:
             logger.error(f"AutoDL API error: {e}")
             return self._get_fallback_response(user_message)
