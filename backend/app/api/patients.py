@@ -10,6 +10,27 @@ from ..models.user import User
 router = APIRouter()
 
 
+# 注意：带固定前缀的路由必须放在动态参数路由之前
+# 否则 /openid/xxx 会被 /{patient_id} 匹配
+
+@router.get("/by-openid/{openid}", response_model=PatientResponse, summary="根据 openid 获取患者信息")
+async def get_patient_by_openid(
+    openid: str,
+    db: Session = Depends(get_db)
+):
+    """
+    根据微信 openid 获取患者信息
+    用于小程序登录后获取患者详情
+    """
+    patient = db.query(Patient).filter(Patient.openid == openid).first()
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="患者不存在"
+        )
+    return patient
+
+
 @router.get("/", response_model=List[PatientResponse], summary="获取患者列表")
 async def get_patients(
     skip: int = Query(0, ge=0, description="跳过记录数"),

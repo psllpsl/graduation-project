@@ -15,11 +15,10 @@ async def get_knowledge_list(
     skip: int = Query(0, ge=0, description="跳过记录数"),
     limit: int = Query(10, ge=1, le=100, description="返回记录数"),
     category: Optional[str] = Query(None, description="分类筛选"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     """
-    获取知识库列表（支持分页和分类筛选）
+    获取知识库列表（支持分页和分类筛选）- 公开访问
     """
     query = db.query(KnowledgeBase).filter(KnowledgeBase.is_active == 1)
 
@@ -28,6 +27,17 @@ async def get_knowledge_list(
 
     knowledge_list = query.offset(skip).limit(limit).all()
     return knowledge_list
+
+
+@router.get("/categories", response_model=List[str], summary="获取知识分类列表")
+async def get_categories(
+    db: Session = Depends(get_db)
+):
+    """
+    获取所有知识分类 - 公开访问
+    """
+    categories = db.query(KnowledgeBase.category).distinct().all()
+    return [cat[0] for cat in categories if cat[0]]
 
 
 @router.get("/{knowledge_id}", response_model=KnowledgeBaseResponse, summary="获取知识详情")
@@ -52,17 +62,10 @@ async def get_knowledge(
 async def create_knowledge(
     knowledge_data: KnowledgeBaseCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)  # 需要管理员权限
+    current_user: User = Depends(get_current_admin_user)
 ):
     """
-    创建知识条目（需要管理员权限）
-
-    - **category**: 知识分类
-    - **title**: 知识标题
-    - **content**: 知识内容
-    - **keywords**: 关键词
-    - **source**: 来源
-    - **is_active**: 是否启用
+    创建新的知识条目（需要管理员权限）
     """
     knowledge = KnowledgeBase(**knowledge_data.model_dump())
     db.add(knowledge)
@@ -88,7 +91,6 @@ async def update_knowledge(
             detail="知识条目不存在"
         )
 
-    # 更新字段
     update_data = knowledge_data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(knowledge, key, value)
@@ -119,32 +121,23 @@ async def delete_knowledge(
     return None
 
 
-@router.get("/search/query", response_model=List[KnowledgeBaseResponse], summary="搜索知识")
+@router.get("/search/query", response_model=List[KnowledgeBaseResponse], summary="搜索知识库")
 async def search_knowledge(
-    q: str = Query(..., min_length=1, description="搜索关键词"),
-    limit: int = Query(10, ge=1, le=50, description="返回记录数"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    query: str = Query(..., description="搜索关键词"),
+    skip: int = Query(0, ge=0, description="跳过记录数"),
+    limit: int = Query(10, ge=1, le=100, description="返回记录数"),
+    db: Session = Depends(get_db)
 ):
     """
-    搜索知识库
-
-    - **q**: 搜索关键词
+    根据关键词搜索知识库 - 完全公开，不需要认证
+    
+    **注意**：此接口不使用 Depends(get_current_user)，避免误判为未授权
     """
-    knowledge_list = db.query(KnowledgeBase).filter(
+    results = db.query(KnowledgeBase).filter(
         KnowledgeBase.is_active == 1,
-        KnowledgeBase.content.like(f"%{q}%")
-    ).limit(limit).all()
-    return knowledge_list
-
-
-@router.get("/categories", summary="获取知识分类列表")
-async def get_categories(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    获取所有知识分类
-    """
-    categories = db.query(KnowledgeBase.category).distinct().all()
-    return [cat[0] for cat in categories if cat[0]]
+        (KnowledgeBase.content.like(f"%{query}%")) |
+        (KnowledgeBase.title.like(f"%{query}%")) |
+        (KnowledgeBase.keywords.like(f"%{query}%"))
+    ).offset(skip).limit(limit).all()
+    
+    return results

@@ -1,0 +1,47 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/profile/profile",
+    "pages/appointment/appointment",
+    "pages/knowledge/knowledge"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#4A90D9",
+    "navigationBarTitleText": "牙科修复复诊助手",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#4A90D9",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "对话",
+        "iconPath": "images/chat.png",
+        "selectedIconPath": "images/chat-active.png"
+      },
+      {
+        "pagePath": "pages/appointment/appointment",
+        "text": "复诊",
+        "iconPath": "images/appointment.png",
+        "selectedIconPath": "images/appointment-active.png"
+      },
+      {
+        "pagePath": "pages/knowledge/knowledge",
+        "text": "知识",
+        "iconPath": "images/knowledge.png",
+        "selectedIconPath": "images/knowledge-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "images/profile.png",
+        "selectedIconPath": "images/profile-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

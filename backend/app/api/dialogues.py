@@ -10,8 +10,69 @@ from ..models.user import User
 from ..services.ai_service import get_ai_service
 from ..utils.redis_cache import cache
 from ..config import settings
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
 
 router = APIRouter()
+
+
+def get_patient_id_from_token(credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False))) -> Optional[int]:
+    """从 JWT Token 中提取 patient_id"""
+    if not credentials:
+        return None
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        sub = payload.get("sub")  # 格式："patient:123"
+        if sub and sub.startswith("patient:"):
+            return int(sub.split(":")[1])
+        patient_id = payload.get("patient_id")
+        if patient_id:
+            return int(patient_id)
+    except (JWTError, ValueError, KeyError):
+        pass
+    return None
+
+
+@router.post("/chat", response_model=DialogueResponse, summary="患者对话接口")
+async def patient_chat(
+    dialogue_data: DialogueCreate,
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
+    db: Session = Depends(get_db)
+):
+    """
+    患者专用对话接口（从 Token 中自动获取 patient_id）
+    """
+    patient_id = get_patient_id_from_token(credentials)
+    
+    if not patient_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="请先登录"
+        )
+    
+    # 生成 AI 回复
+    ai_service = get_ai_service()
+    ai_response = ai_service.generate_response(
+        user_message=dialogue_data.user_message,
+        patient_id=patient_id,
+        session_id=dialogue_data.session_id,
+        db=db
+    )
+    
+    # 保存到数据库
+    dialogue = Dialogue(
+        patient_id=patient_id,
+        session_id=dialogue_data.session_id,
+        user_message=dialogue_data.user_message,
+        ai_response=ai_response,
+        message_type=dialogue_data.message_type or "consultation"
+    )
+    db.add(dialogue)
+    db.commit()
+    db.refresh(dialogue)
+    
+    return dialogue
 
 
 @router.get("/", response_model=List[DialogueResponse], summary="获取对话记录列表")
@@ -105,15 +166,26 @@ async def get_dialogues_by_session(
     session_id: str,
     skip: int = Query(0, ge=0, description="跳过记录数"),
     limit: int = Query(20, ge=1, le=100, description="返回记录数"),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
+    db: Session = Depends(get_db)
 ):
     """
     获取指定会话的所有对话记录
+    
+    **安全机制**：从 Token 中提取 patient_id，只返回该患者的会话
     """
+    patient_id = get_patient_id_from_token(credentials)
+    
+    if not patient_id:
+        # 未登录，返回空列表
+        return []
+    
+    # 查询该会话的对话历史（限制最近 20 条）
     dialogues = db.query(Dialogue).filter(
-        Dialogue.session_id == session_id
-    ).order_by(Dialogue.created_at).offset(skip).limit(limit).all()
+        Dialogue.session_id == session_id,
+        Dialogue.patient_id == patient_id  # 确保只能查看自己的对话
+    ).order_by(Dialogue.created_at.asc()).offset(skip).limit(limit).all()
+    
     return dialogues
 
 

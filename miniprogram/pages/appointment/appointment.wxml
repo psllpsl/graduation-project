@@ -1,0 +1,72 @@
+<!--pages/appointment/appointment.wxml - 复诊计划页面-->
+<view class="container">
+  <!-- 头部统计 -->
+  <view class="header-card">
+    <view class="stat-item">
+      <view class="stat-value">{{upcomingCount}}</view>
+      <view class="stat-label">待复诊</view>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <view class="stat-value">{{completedCount}}</view>
+      <view class="stat-label">已完成</view>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <view class="stat-value">{{totalCount}}</view>
+      <view class="stat-label">总计</view>
+    </view>
+  </view>
+
+  <!-- 复诊列表 -->
+  <view class="appointment-list">
+    <view class="section-title">复诊计划</view>
+    
+    <!-- 加载中 -->
+    <view class="loading" wx:if="{{loading}}">
+      <view class="loading-text">加载中...</view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty" wx:elif="{{appointments.length === 0}}">
+      <view class="empty-icon">📅</view>
+      <view class="empty-text">暂无复诊计划</view>
+    </view>
+
+    <!-- 复诊列表 -->
+    <view 
+      class="appointment-card {{item.status}}" 
+      wx:for="{{appointments}}" 
+      wx:key="id"
+      bindtap="onAppointmentTap"
+      data-item="{{item}}"
+    >
+      <view class="card-header">
+        <view class="appointment-type">{{item.appointment_type}}</view>
+        <view class="status-tag {{item.status}}">
+          {{item.status === 'pending' ? '待复诊' : item.status === 'completed' ? '已完成' : '已取消'}}
+        </view>
+      </view>
+      
+      <view class="card-body">
+        <view class="info-row">
+          <text class="label">复诊时间：</text>
+          <text class="value">{{item.appointment_date}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.notes}}">
+          <text class="label">备注：</text>
+          <text class="value">{{item.notes}}</text>
+        </view>
+        <view class="info-row" wx:if="{{item.reminder_sent}}">
+          <text class="label">提醒状态：</text>
+          <text class="value sent">已发送提醒</text>
+        </view>
+      </view>
+      
+      <view class="card-footer" wx:if="{{item.status === 'pending'}}">
+        <button class="btn-confirm" bindtap="onConfirm" data-id="{{item.id}}">确认复诊</button>
+        <button class="btn-cancel" bindtap="onCancel" data-id="{{item.id}}">取消复诊</button>
+      </view>
+    </view>
+  </view>
+</view>

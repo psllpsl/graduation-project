@@ -1,0 +1,104 @@
+<!--pages/index/index.wxml - 对话主界面-->
+<view class="container">
+  <!-- 聊天消息列表 -->
+  <scroll-view
+    class="chat-container"
+    scroll-y
+    scroll-into-view="{{scrollToView}}"
+    scroll-with-animation
+    enable-flex
+    scroll-anchoring
+  >
+    <!-- 欢迎消息 -->
+    <view class="message-item ai-message" wx:if="{{messages.length === 0}}">
+      <view class="avatar">
+        <image class="avatar-image" src="/images/ai-avatar.png" mode="aspectFill"></image>
+      </view>
+      <view class="message-content">
+        <view class="message-bubble">
+          <text class="message-text">您好！我是您的牙科修复助手小齿🦷 有任何术后问题都可以问我哦~</text>
+        </view>
+        <view class="message-time">{{currentTime}}</view>
+      </view>
+    </view>
+
+    <!-- 消息列表 -->
+    <view 
+      class="message-item {{item.isUser ? 'user-message' : 'ai-message'}}" 
+      wx:for="{{messages}}" 
+      wx:key="id"
+      id="msg-{{index}}"
+    >
+      <view class="avatar" wx:if="{{!item.isUser}}">
+        <image class="avatar-image" src="/images/ai-avatar.png" mode="aspectFill"></image>
+      </view>
+      
+      <view class="message-content">
+        <view class="message-bubble {{item.isUser ? 'user-bubble' : 'ai-bubble'}}">
+          <text class="message-text">{{item.content}}</text>
+        </view>
+        <view class="message-time">{{item.time}}</view>
+      </view>
+      
+      <view class="avatar" wx:if="{{item.isUser}}">
+        <image class="avatar-image" src="/images/user-avatar.png" mode="aspectFill"></image>
+      </view>
+    </view>
+
+    <!-- 加载中 -->
+    <view class="loading-message" wx:if="{{isLoading}}">
+      <view class="avatar">
+        <image class="avatar-image" src="/images/ai-avatar.png" mode="aspectFill"></image>
+      </view>
+      <view class="message-content">
+        <view class="message-bubble ai-bubble">
+          <view class="loading-dots">
+            <view class="dot"></view>
+            <view class="dot"></view>
+            <view class="dot"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 输入区域 -->
+  <view class="input-area">
+    <view class="input-wrapper">
+      <input
+        class="message-input"
+        type="text"
+        placeholder="请输入您的问题..."
+        placeholder-class="input-placeholder"
+        value="{{inputValue}}"
+        bindinput="onInput"
+        bindconfirm="onSend"
+        confirm-type="send"
+        maxlength="500"
+        focus="{{true}}"
+      />
+      <button
+        class="send-btn {{canSend ? 'active' : ''}}"
+        bindtap="onSend"
+      >
+        发送
+      </button>
+    </view>
+    
+    <!-- 快捷问题 -->
+    <view class="quick-questions" wx:if="{{messages.length === 0}}">
+      <view class="quick-title">常见问题：</view>
+      <view class="quick-list">
+        <view 
+          class="quick-item" 
+          wx:for="{{quickQuestions}}" 
+          wx:key="*this"
+          bindtap="onQuickQuestion"
+          data-question="{{item}}"
+        >
+          {{item}}
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

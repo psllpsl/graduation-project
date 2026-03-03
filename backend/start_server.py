@@ -1,87 +1,190 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-牙科修复 AI 系统 - FastAPI 后端服务启动脚本
+牙科修复复诊系统 - 后端启动脚本
+功能：
+1. 交互式输入 AI 服务地址
+2. 自动更新 .env 配置文件
+3. 启动 FastAPI 后端服务
+
+使用方法：
+    python start_server.py
 """
 
 import os
+import re
 import sys
-import subprocess
 
-def get_autodl_url():
-    """获取 AutoDL AI 服务地址"""
-    default_url = "https://u769760-522r-e89d6ec1.bjb2.seetacloud.com:8443"
+# 项目根目录
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ENV_FILE = os.path.join(BASE_DIR, '.env')
+
+
+def read_env_file():
+    """读取 .env 文件内容"""
+    if not os.path.exists(ENV_FILE):
+        print(f"警告：{ENV_FILE} 不存在，将创建新文件")
+        return {}
     
+    config = {}
+    with open(ENV_FILE, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, value = line.split('=', 1)
+                config[key.strip()] = value.strip()
+    return config
+
+
+def write_env_file(config):
+    """更新 .env 文件"""
+    with open(ENV_FILE, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # 更新 AI_SERVICE_URL
+    old_url_pattern = r'(AI_SERVICE_URL\s*=\s*).+'
+    new_content = re.sub(
+        old_url_pattern,
+        f'\\1{config["AI_SERVICE_URL"]}',
+        content
+    )
+    
+    with open(ENV_FILE, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+    
+    print(f"[OK] 已更新 .env 文件")
+
+
+def get_ai_service_url():
+    """获取 AI 服务地址（交互式输入）"""
     print("=" * 60)
-    print("  配置 AutoDL AI 服务地址")
-    print("=" * 60)
-    print()
-    print(f"默认地址：{default_url}")
-    print()
-    print("格式要求:")
-    print("  1. 以 https:// 开头")
-    print("  2. 包含 seetacloud.com")
-    print("  3. 包含端口号 (如 :8443)")
-    print()
+    print("牙科修复复诊系统 - 后端启动")
     print("=" * 60)
     print()
     
-    while True:
-        user_input = input("请输入 AutoDL AI 服务地址 (直接回车使用默认值): ").strip()
-        
-        if not user_input:
-            url = default_url
-            print(f"\n[使用默认值] {url}")
+    # 读取当前配置
+    config = read_env_file()
+    current_url = config.get('AI_SERVICE_URL', '')
+    
+    print(f"当前 AI 服务地址：{current_url}")
+    print()
+    print("请输入新的 AI 服务地址（来自 AutoDL 控制台）")
+    print("格式：https://uu769760-xxx-xxx.bjb1.seetacloud.com:8443")
+    print("（如果地址未变化，直接按回车使用当前地址）")
+    print()
+    
+    # 获取用户输入
+    new_url = input("AI 服务地址：").strip()
+    
+    if not new_url:
+        # 使用当前地址
+        if current_url:
+            print(f"使用当前地址：{current_url}")
+            return current_url
         else:
-            url = user_input
-            print(f"\n[自定义地址] {url}")
+            print("错误：未配置 AI 服务地址")
+            sys.exit(1)
+    
+    # 验证 URL 格式
+    if not new_url.startswith('https://'):
+        print("警告：URL 应该以 https:// 开头")
+        confirm = input("是否继续使用？(y/n): ").strip().lower()
+        if confirm != 'y':
+            return get_ai_service_url()
+    
+    if ':8443' not in new_url:
+        print("警告：URL 应该包含端口 :8443")
+        confirm = input("是否继续使用？(y/n): ").strip().lower()
+        if confirm != 'y':
+            return get_ai_service_url()
+    
+    # 更新配置
+    config['AI_SERVICE_URL'] = new_url.rstrip('/')
+    write_env_file(config)
+    
+    print()
+    print(f"[OK] AI 服务地址已更新：{config['AI_SERVICE_URL']}")
+    return config['AI_SERVICE_URL']
+
+
+def test_ai_connection(url):
+    """测试 AI 服务连接"""
+    print()
+    print("正在测试 AI 服务连接...")
+    
+    try:
+        import httpx
+        import warnings
+        warnings.filterwarnings("ignore", message="Unverified HTTPS request")
         
-        # 验证格式
-        if not (url.startswith("https://") and "seetacloud.com" in url and ":" in url.split("seetacloud.com")[1][:10]):
-            print("\n[错误] 地址格式不正确！请确保:")
-            print("  1. 以 https:// 开头")
-            print("  2. 包含 seetacloud.com")
-            print("  3. 包含端口号 (如 :8443)")
-            print()
-            continue
+        api_url = url.rstrip('/') + '/generate'
         
-        print("\n[成功] 地址格式验证通过")
-        return url
+        with httpx.Client(
+            timeout=httpx.Timeout(30, connect=10.0),
+            verify=False
+        ) as client:
+            response = client.post(
+                api_url,
+                json={
+                    "prompt": "测试连接",
+                    "max_tokens": 10
+                },
+                headers={"Content-Type": "application/json"}
+            )
+            
+            if response.status_code == 200:
+                print("[OK] AI 服务连接成功！")
+                return True
+            else:
+                print(f"[警告] AI 服务响应异常：{response.status_code}")
+                print("继续启动后端服务...")
+                return True
+                
+    except Exception as e:
+        print(f"[警告] AI 服务连接失败：{e}")
+        print("后端服务仍会启动，但 AI 对话功能可能不可用")
+        return True
+
+
+def start_server():
+    """启动 FastAPI 后端服务"""
+    print()
+    print("=" * 60)
+    print("正在启动 FastAPI 后端服务...")
+    print("=" * 60)
+    print()
+    print("访问 API 文档：http://localhost:8000/docs")
+    print("按 Ctrl+C 停止服务")
+    print()
+    
+    # 启动服务
+    import uvicorn
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )
+
 
 def main():
-    print("=" * 40)
-    print(" 牙科修复 AI 系统 - FastAPI 后端服务")
-    print("=" * 40)
-    print()
-    
-    # 获取 AutoDL 地址
-    autodl_url = get_autodl_url()
-    
-    # 设置环境变量
-    os.environ["AI_SERVICE_URL"] = autodl_url
-    
-    print()
-    print("=" * 60)
-    print("  服务启动成功！")
-    print("=" * 60)
-    print()
-    print("  API 文档地址：http://localhost:8000/docs")
-    print("  ReDoc 文档：http://localhost:8000/redoc")
-    print(f"  AI 服务地址：{autodl_url}")
-    print()
-    print("  按 Ctrl+C 停止服务")
-    print()
-    print("=" * 60)
-    print()
-    
-    # 启动 uvicorn
-    subprocess.run([
-        sys.executable, "-m", "uvicorn", 
-        "app.main:app", 
-        "--reload", 
-        "--host", "0.0.0.0", 
-        "--port", "8000"
-    ])
+    """主函数"""
+    try:
+        # 1. 获取 AI 服务地址
+        ai_url = get_ai_service_url()
+        
+        # 2. 测试连接（可选）
+        test_ai_connection(ai_url)
+        
+        # 3. 启动服务
+        start_server()
+        
+    except KeyboardInterrupt:
+        print("\n")
+        print("服务已停止")
+    except Exception as e:
+        print(f"\n[错误] 启动失败：{e}")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

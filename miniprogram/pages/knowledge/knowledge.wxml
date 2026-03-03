@@ -1,0 +1,77 @@
+<!--pages/knowledge/knowledge.wxml - 知识库页面-->
+<view class="container">
+  <!-- 搜索框 -->
+  <view class="search-box">
+    <view class="search-input-wrapper">
+      <text class="search-icon">🔍</text>
+      <input 
+        class="search-input" 
+        placeholder="搜索牙科修复知识" 
+        placeholder-class="input-placeholder"
+        value="{{searchValue}}"
+        bindinput="onSearchInput"
+        bindconfirm="onSearch"
+      />
+      <text class="clear-icon" wx:if="{{searchValue}}" bindtap="onClear">✕</text>
+    </view>
+  </view>
+
+  <!-- 分类标签 -->
+  <view class="category-scroll">
+    <scroll-view scroll-x class="category-list">
+      <view 
+        class="category-item {{currentCategory === '' ? 'active' : ''}}" 
+        bindtap="onCategoryChange"
+        data-category=""
+      >
+        全部
+      </view>
+      <view 
+        class="category-item {{currentCategory === item ? 'active' : ''}}" 
+        wx:for="{{categories}}" 
+        wx:key="*this"
+        bindtap="onCategoryChange"
+        data-category="{{item}}"
+      >
+        {{item}}
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 知识列表 -->
+  <view class="knowledge-list">
+    <!-- 加载中 -->
+    <view class="loading" wx:if="{{loading}}">
+      <view class="loading-text">加载中...</view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty" wx:elif="{{knowledgeList.length === 0}}">
+      <view class="empty-icon">📚</view>
+      <view class="empty-text">暂无相关知识</view>
+    </view>
+
+    <!-- 知识卡片 -->
+    <view 
+      class="knowledge-card" 
+      wx:for="{{knowledgeList}}" 
+      wx:key="id"
+      bindtap="onKnowledgeTap"
+      data-item="{{item}}"
+    >
+      <view class="card-header">
+        <view class="category-tag">{{item.category}}</view>
+        <view class="source" wx:if="{{item.source}}">{{item.source}}</view>
+      </view>
+      <view class="card-title">{{item.title}}</view>
+      <view class="card-summary">{{item.content}}</view>
+      <view class="card-footer">
+        <view class="keywords" wx:if="{{item.keywords}}">
+          <text class="keyword" wx:for="{{item.keywords.split(',')}}" wx:key="*this" wx:for-item="keyword">
+            #{{keyword.trim()}}
+          </text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

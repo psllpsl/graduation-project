@@ -1,0 +1,199 @@
+/* pages/appointment/appointment.wxss - 复诊计划样式 */
+.container {
+  padding: 20rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+}
+
+/* 头部统计卡片 */
+.header-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: linear-gradient(135deg, #4A90D9 0%, #67A3E0 100%);
+  border-radius: 16rpx;
+  padding: 40rpx 20rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 8rpx 24rpx rgba(74, 144, 217, 0.3);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-divider {
+  width: 1rpx;
+  height: 60rpx;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 章节标题 */
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding-left: 10rpx;
+}
+
+/* 复诊卡片 */
+.appointment-card {
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  border-left: 8rpx solid #4A90D9;
+}
+
+.appointment-card.pending {
+  border-left-color: #FF9800;
+}
+
+.appointment-card.completed {
+  border-left-color: #4CAF50;
+  opacity: 0.7;
+}
+
+.appointment-card.cancelled {
+  border-left-color: #999;
+  opacity: 0.6;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.appointment-type {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+}
+
+.status-tag {
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+}
+
+.status-tag.pending {
+  background-color: #FFF3E0;
+  color: #FF9800;
+}
+
+.status-tag.completed {
+  background-color: #E8F5E9;
+  color: #4CAF50;
+}
+
+.status-tag.cancelled {
+  background-color: #F5F5F5;
+  color: #999;
+}
+
+.card-body {
+  margin-bottom: 20rpx;
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 12rpx;
+  font-size: 28rpx;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  color: #999;
+  min-width: 140rpx;
+}
+
+.value {
+  color: #333;
+  flex: 1;
+}
+
+.value.sent {
+  color: #4CAF50;
+}
+
+.card-footer {
+  display: flex;
+  gap: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.btn-confirm,
+.btn-cancel {
+  flex: 1;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  border: none;
+}
+
+.btn-confirm {
+  background-color: #4A90D9;
+  color: #fff;
+}
+
+.btn-cancel {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+/* 空状态 */
+.empty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 100rpx 40rpx;
+  background-color: #fff;
+  border-radius: 12rpx;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 加载状态 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60rpx;
+  background-color: #fff;
+  border-radius: 12rpx;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: #999;
+}

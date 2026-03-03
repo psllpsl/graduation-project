@@ -6,7 +6,40 @@
 
 ## 推送历史
 
-### v2.2 - 2026-02-28（当前版本）✅
+### v3.0 - 2026-03-03（当前版本）✅
+
+**提交信息：** feat: 完成微信小程序前端开发
+
+**更新内容:**
+- ✅ 完成微信小程序 4 个核心页面（对话、复诊、知识、个人中心）
+- ✅ 实现微信登录与 Token 管理
+- ✅ 实现 AI 对话功能（支持快捷问题、会话历史）
+- ✅ 实现复诊计划查看与状态管理
+- ✅ 实现知识库浏览与搜索功能
+- ✅ 优化后端接口（患者 Token 认证、公开接口）
+- ✅ 优化 AI 提示词（名字：小齿，放宽输出限制）
+- ✅ 实现真机测试配置（局域网 IP）
+- ✅ 创建网络配置说明文档
+
+**文件变更:**
+- 新增 miniprogram/ 目录（完整小程序项目）
+- 修改 backend/app/api/auth.py（添加 wx-login 接口）
+- 修改 backend/app/api/patients.py（添加 by-openid 接口）
+- 修改 backend/app/api/dialogues.py（添加 chat 接口）
+- 修改 backend/app/api/knowledge.py（公开访问）
+- 修改 backend/app/api/appointments.py（患者接口）
+- 修改 backend/app/services/ai_service.py（提示词优化）
+- 新增 backend/start_server.py（交互式启动脚本）
+- 新增 backend/start.bat（一键启动）
+- 新增 miniprogram/网络配置说明.md
+
+**提交哈希：** 待推送
+
+**推送状态：** ⏳ 待推送
+
+---
+
+### v2.2 - 2026-02-28
 
 **提交信息：** feat: 增强对话删除功能和 AI 服务稳定性
 
@@ -221,21 +254,35 @@ git push origin v1.0
 
 ## 当前状态
 
-**本地版本**：v2.2
+**本地版本**：v3.0
 **远程版本**：v2.2
-**待推送**：无
+**待推送**：v3.0（小程序开发完成）
 
-**文档清单**（12 个核心文档）：
+**推送命令**：
+```bash
+cd D:\Project\毕业设计
+git add .
+git commit -m "feat: 完成微信小程序前端开发 (v3.0)"
+git push
+```
+
+**文档清单**（14 个核心文档）：
 - 毕业设计组成说明文档.md (v2.1)
 - 01-数据库设计与搭建指南.md (v1.4)
 - 02-FastAPI 后端框架搭建指南.md (v1.4)
 - 03-AI 训练与知识库构建指南.md (v2.0)
-- GITHUB 推送记录.md (v2.2)
+- GITHUB 推送记录.md (v3.0)
 - 文档更新总结.md (v1.0)
+- 文档整理报告.md (v1.0)
+- QWEN.md (v2.0)
 - backend/README.md (v1.2)
 - backend/PROJECT_COMPLETE.md (v1.2)
 - backend/AI 服务配置说明.md (v1.0)
+- backend/启动说明.md (v1.0)
 - data/README.md (v6.2)
 - data/数据集构建完成报告.md (v6.2)
 - docs/数据库设计/数据字典.md (v1.0)
 - docs/数据库设计/ER 图.md (v1.0)
+- miniprogram/README.md (v1.0)
+- miniprogram/开发记录.md (v1.0)
+- miniprogram/网络配置说明.md (v1.0)

@@ -88,30 +88,41 @@ class AIService:
                 api_url = api_url.rstrip("/") + "/generate"
 
             logger.info(f"Calling AutoDL API: {api_url}")
-            logger.info(f"Request data: prompt={full_prompt[:50]}..., max_tokens={self.max_tokens}")
+            logger.info(f"Request prompt: {full_prompt[:100]}...")
 
-            with httpx.Client(timeout=self.timeout, verify=False) as client:
+            # 使用 httpx 客户端，禁用 SSL 验证（AutoDL 使用自签名证书）
+            with httpx.Client(
+                timeout=httpx.Timeout(self.timeout, connect=10.0),
+                verify=False  # 禁用 SSL 验证
+            ) as client:
                 response = client.post(
                     api_url,
                     json={
                         "prompt": full_prompt + constraint,
                         "system_prompt": system_prompt,
-                        "max_tokens": self.max_tokens,
+                        "max_tokens": 500,  # 增加 max_tokens 允许更长回复
                         "temperature": 0.5
+                    },
+                    headers={
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
                     }
                 )
-                
+
                 logger.info(f"Response status: {response.status_code}")
-                
+                logger.info(f"Response content: {response.text[:200] if response.text else 'empty'}")
+
                 if response.status_code == 404:
                     logger.error(f"404 Error - URL may be incorrect. Current URL: {api_url}")
-                    logger.error(f"Base URL from settings: {self.api_url}")
-                
+                    raise Exception(f"AI 服务地址错误：{api_url}")
+
                 response.raise_for_status()
                 result = response.json()
-                logger.info(f"Response JSON keys: {result.keys() if isinstance(result, dict) else 'Not a dict'}")
+                logger.info(f"Response data keys: {list(result.keys()) if isinstance(result, dict) else 'Not dict'}")
 
                 text = result.get("text", "")
+                if not text:
+                    text = result.get("response", "")
                 if text:
                     # 后处理：截断过长回复
                     return self._post_process_response(text)
@@ -119,21 +130,24 @@ class AIService:
 
         except httpx.HTTPStatusError as e:
             logger.error(f"HTTP Status Error: {e}")
-            logger.error(f"Response content: {e.response.text if hasattr(e.response, 'text') else 'N/A'}")
-            return self._get_fallback_response(user_message)
-        except httpx.RequestError as e:
-            logger.error(f"Request Error: {e}")
-            return self._get_fallback_response(user_message)
+            logger.error(f"Response: {e.response.text if hasattr(e.response, 'text') else 'N/A'}")
+            return f"抱歉，AI 服务响应异常（{e.response.status_code}），请稍后再试。"
+        except httpx.ConnectError as e:
+            logger.error(f"Connect Error: {e}")
+            return "抱歉，无法连接到 AI 服务，请检查网络或服务状态。"
+        except httpx.TimeoutException as e:
+            logger.error(f"Timeout Error: {e}")
+            return "抱歉，AI 服务响应超时，请稍后再试。"
         except Exception as e:
             logger.error(f"AutoDL API error: {e}")
-            return self._get_fallback_response(user_message)
+            return f"抱歉，AI 服务出现错误：{str(e)[:50]}"
 
     def _post_process_response(self, text: str) -> str:
         """
         后处理 AI 回复：截断过长内容，移除追问
         """
         import re
-        
+
         # 1. 检测结束场景（用户说谢谢/好的等），强制返回简短回复
         if any(kw in text.lower() for kw in ['谢谢', '感谢', '不客气']):
             # 如果 AI 开始追问，直接截断
@@ -146,34 +160,34 @@ class AIService:
                         text += '。'
                     text += ' 祝您早日康复！'
                     return text
-        
-        # 2. 如果回复太长，截断到 120 字
-        if len(text) > 120:
+
+        # 2. 如果回复太长，截断到 500 字（允许更长的完整回复）
+        if len(text) > 500:
             for punct in ['。', '！', '？']:
-                idx = text.find(punct, 60)
+                idx = text.find(punct, 300)
                 if idx > 0:
                     text = text[:idx+1]
                     break
             else:
-                text = text[:100] + "..."
-        
+                text = text[:400] + "..."
+
         # 3. 移除追问（以"请问"开头的句子及之后所有内容）
         if '请问' in text:
             idx = text.find('请问')
             text = text[:idx].strip()
-        
+
         # 4. 移除标题格式（【xxx】）
         text = re.sub(r'[\n]*【[^】]+】[\n]*', '\n', text)
-        
+
         # 5. 移除序号（1. 2. 3.）
         text = re.sub(r'\n\d+\.', '.', text)
-        
+
         # 6. 移除分点符号（- xxx）
         text = re.sub(r'\n-', '，', text)
-        
+
         # 7. 清理多余换行
         text = re.sub(r'\n{2,}', '\n', text)
-        
+
         return text.strip()
 
     def _call_llm_api(self, system_prompt: str, user_prompt: str) -> str:
@@ -218,21 +232,41 @@ class AIService:
         Returns:
             System Prompt 字符串
         """
-        base_prompt = """你是一名专业的牙科修复 AI 智能客服助手。
+        base_prompt = """你叫小齿，是一名专业的牙科修复 AI 智能客服助手，服务于牙科修复复诊提醒与管理系统。
+
+【你的身份】
+- 名字：小齿
+- 定位：牙科修复术后护理专家
+- 服务对象：接受牙科修复治疗（种植牙、固定义齿、活动义齿等）的患者
+- 服务时间：7×24 小时在线
+
+【回答风格】
+1. 亲切友好：像温暖的牙科护士一样，语气温和、有同理心
+2. 专业可靠：基于权威医学知识，不提供未经证实的建议
+3. 简洁明了：用患者能听懂的话，避免过多专业术语
+4. 回复长度：根据问题复杂度灵活调整，确保信息完整
 
 【回答格式要求 - 必须遵守】
-1. 字数：严格控制在 80-120 字以内
+1. 字数：简单问题 100-150 字，复杂问题 200-300 字，确保信息完整不遗漏
 2. 格式：使用简单段落，不要用标题、分点、序号
 3. 风格：像医生面对面说话一样自然
 4. 结尾：不要追问"请问您..."，直接给出建议即可
+5. 自称：可以使用"我"或"小齿"，不要用"本系统"
+6. 完整性：重要信息不要省略，必要时可以详细说明
 
-【对话结束识别】
-当用户说"谢谢/好的/知道了/没事了"等，礼貌告别即可，如："不客气，祝您早日康复！"
+【对话场景识别】
+- 术后咨询：提供护理建议、注意事项
+- 复诊提醒：告知复诊时间、复诊前准备
+- 症状咨询：判断是否正常、何时需要就医
+- 日常护理：刷牙、饮食、清洁建议
+- 告别场景：用户说"谢谢/好的/知道了"等，回复"不客气，祝您早日康复！"
 
-【安全原则】
-1. 紧急情况（剧烈疼痛、大量出血）→ 建议立即就医
-2. 不提供诊断，只给一般性建议
-3. 个体差异建议咨询主治医生"""
+【安全原则 - 必须遵守】
+1. 紧急情况（剧烈疼痛、大量出血、肿胀严重）→ 建议立即就医或联系主治医生
+2. 不提供诊断，只给一般性护理建议
+3. 个体差异问题建议咨询主治医生
+4. 不推荐具体药物品牌，只说药物类别
+5. 不替代医生的面诊和治疗建议"""
 
         # 添加知识片段（精简版）
         if knowledge:

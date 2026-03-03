@@ -1,0 +1,79 @@
+<!--pages/profile/profile.wxml - 个人中心页面-->
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="user-card" wx:if="{{userInfo}}">
+    <view class="user-avatar">
+      <image class="avatar-image" src="{{userInfo.avatarUrl || '/images/user-avatar.png'}}" mode="aspectFill"></image>
+    </view>
+    <view class="user-info">
+      <view class="user-name">{{userInfo.name || '未设置昵称'}}</view>
+      <view class="user-phone" wx:if="{{userInfo.phone}}">📱 {{userInfo.phone}}</view>
+      <view class="user-openid" wx:if="{{openid}}">ID: {{openid}}</view>
+    </view>
+  </view>
+
+  <!-- 未登录状态 -->
+  <view class="login-card" wx:else>
+    <view class="login-avatar">👤</view>
+    <view class="login-title">未登录</view>
+    <view class="login-desc">登录后即可查看复诊计划和咨询问题</view>
+    <button class="btn-login" bindtap="onLogin">微信一键登录</button>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section" wx:if="{{userInfo}}">
+    <view class="section-title">我的信息</view>
+    <view class="menu-list">
+      <view class="menu-item" bindtap="onPatientInfo">
+        <view class="menu-left">
+          <text class="menu-icon">📋</text>
+          <text class="menu-label">个人信息</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+      
+      <view class="menu-item" bindtap="onTreatmentRecords">
+        <view class="menu-left">
+          <text class="menu-icon">🦷</text>
+          <text class="menu-label">治疗记录</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设置菜单 -->
+  <view class="menu-section">
+    <view class="section-title">设置</view>
+    <view class="menu-list">
+      <view class="menu-item" bindtap="onSubscribeMessage">
+        <view class="menu-left">
+          <text class="menu-icon">🔔</text>
+          <text class="menu-label">订阅消息提醒</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+      
+      <view class="menu-item" bindtap="onAbout">
+        <view class="menu-left">
+          <text class="menu-icon">ℹ️</text>
+          <text class="menu-label">关于我们</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+      
+      <view class="menu-item" wx:if="{{userInfo}}" bindtap="onLogout">
+        <view class="menu-left">
+          <text class="menu-icon">🚪</text>
+          <text class="menu-label">退出登录</text>
+        </view>
+        <text class="menu-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-info">
+    <text class="version-text">版本号：v1.0.0</text>
+  </view>
+</view>
