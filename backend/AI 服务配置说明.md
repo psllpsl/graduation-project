@@ -5,11 +5,11 @@
 ### AutoDL 服务地址
 
 ```env
-AI_SERVICE_URL=https://uu769760-b58d-861e482d.bjb1.seetacloud.com:8443/generate
+AI_SERVICE_URL=https://你的实例 ID.seetacloud.com:端口/generate
 ```
 
 **重要**：
-- 实例 ID：`uu769760-b58d-861e482d`（两个 `u`，不是 `u769760`）
+- 实例 ID：`你的实例 ID`（两个 `u`，不是 `u769760`）
 - 内网端口：`6008`
 - 外网端口：`8443`
 - API 路径：`/generate`
@@ -18,7 +18,7 @@ AI_SERVICE_URL=https://uu769760-b58d-861e482d.bjb1.seetacloud.com:8443/generate
 
 ```env
 # AI 服务配置
-AI_SERVICE_URL=https://uu769760-b58d-861e482d.bjb1.seetacloud.com:8443/generate
+AI_SERVICE_URL=https://你的实例 ID.seetacloud.com:端口/generate
 AI_SERVICE_TYPE=autodl
 AI_MAX_TOKENS=150
 AI_TEMPERATURE=0.7
@@ -48,7 +48,7 @@ bash start_tr.sh
 1. 进入实例详情
 2. 点击"自定义服务"
 3. 添加服务：内网端口 `6008`，协议 `HTTP`
-4. 复制生成的公网 URL（如：`https://uu769760-b58d-861e482d.bjb1.seetacloud.com:8443`）
+4. 复制生成的公网 URL（如：`https://你的实例 ID.seetacloud.com:端口`）
 
 ### 4. 测试服务
 
@@ -59,7 +59,7 @@ curl http://localhost:6008/generate \
     -d '{"prompt": "种植牙术后多久能吃饭？", "max_tokens": 150}'
 
 # 公网测试
-curl https://uu769760-b58d-861e482d.bjb1.seetacloud.com:8443/generate \
+curl https://你的实例 ID.seetacloud.com:端口/generate \
     -H "Content-Type: application/json" \
     -d '{"prompt": "种植牙术后多久能吃饭？", "max_tokens": 150}'
 ```

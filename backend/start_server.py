@@ -67,7 +67,7 @@ def get_ai_service_url():
     print(f"当前 AI 服务地址：{current_url}")
     print()
     print("请输入新的 AI 服务地址（来自 AutoDL 控制台）")
-    print("格式：https://uu769760-xxx-xxx.bjb1.seetacloud.com:8443")
+    print("格式：https://你的实例 ID.seetacloud.com:端口")
     print("（如果地址未变化，直接按回车使用当前地址）")
     print()
     

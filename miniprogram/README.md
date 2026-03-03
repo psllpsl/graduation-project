@@ -163,7 +163,7 @@ miniprogram/
 
 ```json
 {
-  "appid": "wxd1234567890abcde",
+  "appid": "your-appid-here",
   // ...
 }
 ```

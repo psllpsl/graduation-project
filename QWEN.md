@@ -181,7 +181,7 @@ DATABASE_HOST=localhost
 DATABASE_PORT=3306
 DATABASE_NAME=dental_clinic
 DATABASE_USER=root
-DATABASE_PASSWORD=123456
+DATABASE_PASSWORD=你的密码
 
 # Redis 配置
 REDIS_HOST=localhost
@@ -192,7 +192,8 @@ REDIS_DB=0
 SECRET_KEY=your-secret-key-change-in-production
 
 # AI 服务配置（已部署到 AutoDL）
-AI_SERVICE_URL=https://uu769760-b58d-861e482d.bjb1.seetacloud.com:8443/generate
+# 注意：实例 ID 会变化，请根据实际情况配置
+AI_SERVICE_URL=https://你的实例 ID.seetacloud.com:端口/generate
 AI_SERVICE_TYPE=autodl
 AI_MAX_TOKENS=150
 AI_TEMPERATURE=0.7
@@ -329,7 +330,7 @@ patients ||--o{ dialogues : "产生"
 AI 模型已部署到 AutoDL 云平台（RTX 4090 GPU），配置如下：
 
 ```env
-AI_SERVICE_URL=https://uu769760-b58d-861e482d.bjb1.seetacloud.com:8443/generate
+AI_SERVICE_URL=https://你的实例 ID.seetacloud.com:端口/generate
 AI_SERVICE_TYPE=autodl
 AI_MAX_TOKENS=150
 AI_TEMPERATURE=0.7

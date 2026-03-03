@@ -84,7 +84,7 @@ DATABASE_HOST=localhost
 DATABASE_PORT=3306
 DATABASE_NAME=dental_clinic
 DATABASE_USER=root
-DATABASE_PASSWORD=123456
+DATABASE_PASSWORD=你的密码
 
 # Redis 配置
 REDIS_HOST=localhost
@@ -232,14 +232,14 @@ pytest tests/
 
 编辑 `.env` 文件：
 ```env
-AI_SERVICE_URL=https://uu769760-b58d-861e482d.bjb1.seetacloud.com:8443/generate
+AI_SERVICE_URL=https://你的实例 ID.seetacloud.com:端口/generate
 AI_SERVICE_TYPE=autodl
 AI_MAX_TOKENS=150
 AI_TEMPERATURE=0.7
 AI_TIMEOUT_SECONDS=60
 ```
 
-**注意**：URL 中的实例 ID 必须与你的 AutoDL 实例匹配（`uu769760-b58d-861e482d`）。
+**注意**：URL 中的实例 ID 必须与你的 AutoDL 实例匹配（`你的实例 ID`）。
 
 ### 测试连接
 

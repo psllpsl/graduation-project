@@ -323,7 +323,7 @@ DATABASE_HOST=localhost
 DATABASE_PORT=3306
 DATABASE_NAME=dental_clinic
 DATABASE_USER=root
-DATABASE_PASSWORD=123456
+DATABASE_PASSWORD=你的密码
 
 # JWT 配置（生产环境请修改为随机字符串）
 SECRET_KEY=your-secret-key-change-in-production

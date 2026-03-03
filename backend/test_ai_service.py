@@ -9,8 +9,8 @@ import warnings
 warnings.filterwarnings("ignore", message="Unverified HTTPS request")
 
 # AI 服务配置
-# 当前地址：https://uu769760-8aa7-e51ad73a.bjb1.seetacloud.com:8443
-AI_SERVICE_URL = "https://uu769760-8aa7-e51ad73a.bjb1.seetacloud.com:8443"
+# 当前地址：https://你的实例 ID.seetacloud.com:端口
+AI_SERVICE_URL = "https://你的实例 ID.seetacloud.com:端口"
 
 def test_ai_service():
     """测试 AI 服务连接"""

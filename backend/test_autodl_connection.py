@@ -5,7 +5,7 @@ import httpx
 import json
 
 # AutoDL 服务地址
-AUTODL_URL = "https://uu769760-8e18-d25f4791.bjb1.seetacloud.com:8443"
+AUTODL_URL = "https://你的实例 ID.seetacloud.com:端口"
 
 print("=" * 60)
 print("测试本地后端连接 AutoDL AI 服务")

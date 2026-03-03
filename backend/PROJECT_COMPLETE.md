@@ -259,7 +259,7 @@ DATABASE_HOST=localhost
 DATABASE_PORT=3306
 DATABASE_NAME=dental_clinic
 DATABASE_USER=root
-DATABASE_PASSWORD=123456
+DATABASE_PASSWORD=你的密码
 
 # Redis 配置
 REDIS_HOST=localhost
@@ -305,13 +305,13 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 
 **部署平台**：AutoDL 云平台（北京 1 区）
 **GPU 型号**：NVIDIA GeForce RTX 4090 24GB
-**服务地址**：`https://uu769760-8e18-d25f4791.bjb1.seetacloud.com:8443`
+**服务地址**：`https://你的实例 ID.seetacloud.com:端口`
 **API 接口**：`POST /generate`
 **响应格式**：`{"text": "...", "model": "dental_qwen"}`
 
 **配置文件** (`backend/.env`):
 ```env
-AI_SERVICE_URL=https://uu769760-8e18-d25f4791.bjb1.seetacloud.com:8443/generate
+AI_SERVICE_URL=https://你的实例 ID.seetacloud.com:端口/generate
 AI_SERVICE_TYPE=autodl
 AI_MAX_TOKENS=150
 AI_TEMPERATURE=0.7
