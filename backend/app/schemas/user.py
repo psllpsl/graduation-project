@@ -41,6 +41,7 @@ class Token(BaseModel):
     """Token 响应"""
     access_token: str
     token_type: str = "bearer"
+    user: Optional[dict] = None  # 用户信息
 
 
 class TokenData(BaseModel):

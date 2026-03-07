@@ -59,21 +59,31 @@ def get_ai_service_url():
     print("牙科修复复诊系统 - 后端启动")
     print("=" * 60)
     print()
-    
+
     # 读取当前配置
     config = read_env_file()
     current_url = config.get('AI_SERVICE_URL', '')
-    
+
     print(f"当前 AI 服务地址：{current_url}")
     print()
     print("请输入新的 AI 服务地址（来自 AutoDL 控制台）")
     print("格式：https://你的实例 ID.seetacloud.com:端口")
     print("（如果地址未变化，直接按回车使用当前地址）")
     print()
-    
-    # 获取用户输入
-    new_url = input("AI 服务地址：").strip()
-    
+
+    try:
+        # 获取用户输入
+        new_url = input("AI 服务地址：").strip()
+    except EOFError:
+        # 如果没有输入（管道输入），使用当前地址
+        if current_url:
+            print(f"使用当前地址：{current_url}")
+            return current_url
+        else:
+            print("错误：未配置 AI 服务地址")
+            input("按回车键退出...")
+            sys.exit(1)
+
     if not new_url:
         # 使用当前地址
         if current_url:
@@ -81,25 +91,32 @@ def get_ai_service_url():
             return current_url
         else:
             print("错误：未配置 AI 服务地址")
+            input("按回车键退出...")
             sys.exit(1)
-    
+
     # 验证 URL 格式
     if not new_url.startswith('https://'):
         print("警告：URL 应该以 https:// 开头")
-        confirm = input("是否继续使用？(y/n): ").strip().lower()
+        try:
+            confirm = input("是否继续使用？(y/n): ").strip().lower()
+        except EOFError:
+            confirm = 'n'
         if confirm != 'y':
             return get_ai_service_url()
-    
+
     if ':8443' not in new_url:
         print("警告：URL 应该包含端口 :8443")
-        confirm = input("是否继续使用？(y/n): ").strip().lower()
+        try:
+            confirm = input("是否继续使用？(y/n): ").strip().lower()
+        except EOFError:
+            confirm = 'n'
         if confirm != 'y':
             return get_ai_service_url()
-    
+
     # 更新配置
     config['AI_SERVICE_URL'] = new_url.rstrip('/')
     write_env_file(config)
-    
+
     print()
     print(f"[OK] AI 服务地址已更新：{config['AI_SERVICE_URL']}")
     return config['AI_SERVICE_URL']
@@ -144,6 +161,45 @@ def test_ai_connection(url):
         return True
 
 
+def check_port_available(port):
+    """检查端口是否可用"""
+    import socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        sock.bind(('0.0.0.0', port))
+        sock.close()
+        return True
+    except OSError:
+        return False
+
+
+def kill_process_on_port(port):
+    """杀死占用端口的进程"""
+    import subprocess
+    try:
+        # 查找占用端口的进程
+        result = subprocess.run(
+            f'netstat -ano | findstr :{port}',
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        if result.stdout:
+            # 提取 PID
+            for line in result.stdout.strip().split('\n'):
+                if f':{port}' in line:
+                    parts = line.split()
+                    pid = parts[-1]
+                    print(f"[提示] 端口 {port} 被进程 {pid} 占用")
+                    # 杀死进程
+                    subprocess.run(f'taskkill /F /PID {pid}', shell=True, capture_output=True)
+                    print(f"[OK] 已释放端口 {port}")
+                    return True
+    except Exception as e:
+        print(f"[警告] 无法释放端口：{e}")
+    return False
+
+
 def start_server():
     """启动 FastAPI 后端服务"""
     print()
@@ -151,10 +207,22 @@ def start_server():
     print("正在启动 FastAPI 后端服务...")
     print("=" * 60)
     print()
+    
+    # 检查端口是否被占用
+    port = 8000
+    if not check_port_available(port):
+        print(f"[警告] 端口 {port} 被占用")
+        if kill_process_on_port(port):
+            print(f"[OK] 端口 {port} 已释放")
+        else:
+            print(f"[错误] 无法释放端口 {port}，请手动关闭占用程序")
+            input("按回车键退出...")
+            sys.exit(1)
+    
     print("访问 API 文档：http://localhost:8000/docs")
     print("按 Ctrl+C 停止服务")
     print()
-    
+
     # 启动服务
     import uvicorn
     uvicorn.run(
@@ -171,18 +239,22 @@ def main():
     try:
         # 1. 获取 AI 服务地址
         ai_url = get_ai_service_url()
-        
+
         # 2. 测试连接（可选）
         test_ai_connection(ai_url)
-        
+
         # 3. 启动服务
         start_server()
-        
+
     except KeyboardInterrupt:
         print("\n")
         print("服务已停止")
+        input("按回车键退出...")
     except Exception as e:
         print(f"\n[错误] 启动失败：{e}")
+        import traceback
+        traceback.print_exc()
+        input("按回车键退出...")
         sys.exit(1)
 
 

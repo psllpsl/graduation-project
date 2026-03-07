@@ -9,6 +9,7 @@ from ..models.user import User
 from ..models.patient import Patient
 from pydantic import BaseModel
 from datetime import timedelta
+from typing import Optional
 
 
 class WxLoginRequest(BaseModel):
@@ -22,6 +23,25 @@ class WxLoginResponse(BaseModel):
     token_type: str = "bearer"
     openid: str
     user: dict = None
+
+
+class RegisterRequest(BaseModel):
+    """注册请求（需要管理员确认）"""
+    username: str
+    password: str
+    real_name: str
+    role: str = "doctor"
+    phone: Optional[str] = None
+    admin_username: str  # 管理员用户名
+    admin_password: str  # 管理员密码
+
+
+class ResetPasswordRequest(BaseModel):
+    """重置密码请求"""
+    target_username: str  # 要重置密码的用户名
+    admin_username: str  # 管理员用户名
+    admin_password: str  # 管理员密码（用于验证）
+    new_password: str  # 新密码
 
 
 router = APIRouter()
@@ -46,9 +66,21 @@ async def login(
             username=form_data.username,
             password=form_data.password
         )
+        
+        # 获取用户信息
+        user = db.query(User).filter(User.username == form_data.username).first()
+        user_info = {
+            "id": user.id,
+            "username": user.username,
+            "real_name": user.real_name,
+            "role": user.role,
+            "phone": user.phone
+        } if user else None
+        
         return {
             "access_token": access_token,
-            "token_type": "bearer"
+            "token_type": "bearer",
+            "user": user_info
         }
     except ValueError as e:
         raise HTTPException(
@@ -58,29 +90,54 @@ async def login(
         )
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, summary="用户注册")
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, summary="用户注册（需要管理员确认）")
 async def register(
-    user_data: UserCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user)  # 需要管理员权限
+    request: RegisterRequest,
+    db: Session = Depends(get_db)
 ):
     """
-    注册新用户（需要管理员权限）
+    注册新用户（需要管理员密码确认）
 
     - **username**: 用户名
     - **password**: 密码
     - **real_name**: 真实姓名
-    - **role**: 角色（admin/doctor）
+    - **role**: 角色（admin/doctor，默认 doctor）
     - **phone**: 手机号
+    - **admin_username**: 管理员用户名
+    - **admin_password**: 管理员密码（用于验证）
     """
     try:
+        # 验证管理员身份
+        from ..utils.security import verify_password
+        admin = db.query(User).filter(User.username == request.admin_username).first()
+        
+        if not admin or admin.role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="管理员身份验证失败"
+            )
+        
+        if not verify_password(request.admin_password, admin.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="管理员密码错误"
+            )
+        
+        # 检查用户名是否存在
+        existing_user = db.query(User).filter(User.username == request.username).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="用户名已存在"
+            )
+        
         user = create_user(
             db=db,
-            username=user_data.username,
-            password=user_data.password,
-            real_name=user_data.real_name,
-            role=user_data.role,
-            phone=user_data.phone
+            username=request.username,
+            password=request.password,
+            real_name=request.real_name,
+            role=request.role if request.role else "doctor",
+            phone=request.phone
         )
         return user
     except ValueError as e:
@@ -88,6 +145,38 @@ async def register(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
+
+@router.post("/reset-password", summary="重置密码（需要管理员确认）")
+async def reset_password(
+    target_username: str,
+    admin_username: str,
+    admin_password: str,
+    new_password: str,
+    db: Session = Depends(get_db)
+):
+    """
+    重置用户密码（需要管理员确认）
+    """
+    from ..utils.security import verify_password, hash_password
+    
+    # 验证管理员
+    admin = db.query(User).filter(User.username == admin_username).first()
+    if not admin or admin.role != "admin":
+        raise HTTPException(403, "管理员验证失败")
+    if not verify_password(admin_password, admin.password_hash):
+        raise HTTPException(401, "管理员密码错误")
+    
+    # 查找用户
+    user = db.query(User).filter(User.username == target_username).first()
+    if not user:
+        raise HTTPException(404, "用户不存在")
+    
+    # 更新密码
+    user.password_hash = hash_password(new_password)
+    db.commit()
+    
+    return {"message": "密码重置成功", "username": target_username}
 
 
 @router.get("/me", response_model=UserResponse, summary="获取当前用户信息")

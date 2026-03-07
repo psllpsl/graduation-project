@@ -22,29 +22,84 @@ async def get_overview_stats(
     """
     # 患者总数
     total_patients = db.query(func.count(Patient.id)).scalar()
+    
+    # 今日新增患者
+    today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    new_patients_today = db.query(func.count(Patient.id)).filter(
+        Patient.created_at >= today_start
+    ).scalar()
 
     # 复诊计划总数
     total_appointments = db.query(func.count(Appointment.id)).scalar()
 
+    # 今日复诊数量
+    today_appointments = db.query(func.count(Appointment.id)).filter(
+        func.date(Appointment.appointment_date) == datetime.now().date()
+    ).scalar()
+    
     # 待复诊数量
     pending_appointments = db.query(func.count(Appointment.id)).filter(
         Appointment.status == "pending"
     ).scalar()
+    
+    # 今日完成复诊
+    completed_appointments_today = db.query(func.count(Appointment.id)).filter(
+        func.date(Appointment.appointment_date) == datetime.now().date(),
+        Appointment.status == "completed"
+    ).scalar()
 
     # 对话总数
     total_dialogues = db.query(func.count(Dialogue.id)).scalar()
+    
+    # 今日对话数量
+    today_dialogues = db.query(func.count(Dialogue.id)).filter(
+        func.date(Dialogue.created_at) == datetime.now().date()
+    ).scalar()
+    
+    # 昨日对话数量（用于计算增长率）
+    yesterday = datetime.now().date() - timedelta(days=1)
+    yesterday_dialogues = db.query(func.count(Dialogue.id)).filter(
+        func.date(Dialogue.created_at) == yesterday
+    ).scalar()
+    
+    # 对话增长率
+    dialogue_growth_rate = 0
+    if yesterday_dialogues > 0:
+        dialogue_growth_rate = round(((today_dialogues - yesterday_dialogues) / yesterday_dialogues) * 100, 1)
+    elif today_dialogues > 0:
+        dialogue_growth_rate = 100
 
     # 人工接管数量
     handover_count = db.query(func.count(Dialogue.id)).filter(
         Dialogue.is_handover == 1
     ).scalar()
+    
+    # 知识库总数
+    from ..models.knowledge_base import KnowledgeBase
+    total_knowledge = db.query(func.count(KnowledgeBase.id)).filter(
+        KnowledgeBase.is_active == 1
+    ).scalar()
+    
+    # 本周新增知识
+    week_start = today_start - timedelta(days=today_start.weekday())
+    new_knowledge_this_week = db.query(func.count(KnowledgeBase.id)).filter(
+        KnowledgeBase.created_at >= week_start,
+        KnowledgeBase.is_active == 1
+    ).scalar()
 
     return {
         "total_patients": total_patients,
+        "new_patients_today": new_patients_today,
         "total_appointments": total_appointments,
+        "today_appointments": today_appointments,
         "pending_appointments": pending_appointments,
+        "completed_appointments_today": completed_appointments_today,
         "total_dialogues": total_dialogues,
-        "handover_count": handover_count
+        "today_dialogues": today_dialogues,
+        "dialogue_growth_rate": dialogue_growth_rate,
+        "handover_count": handover_count,
+        "total_knowledge": total_knowledge,
+        "new_knowledge_this_week": new_knowledge_this_week
     }
 
 

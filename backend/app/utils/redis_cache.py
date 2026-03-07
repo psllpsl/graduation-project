@@ -27,9 +27,9 @@ class RedisCache:
             # 测试连接
             self.redis_client.ping()
             self.enabled = True
-            print("Redis 连接成功")
+            # print("Redis 连接成功")  # 成功时不打印
         except Exception as e:
-            print(f"Redis 未启用（会话缓存功能将不可用，不影响核心功能）: {e}")
+            # Redis 未启用时不打印警告（静默失败）
             self.redis_client = None
 
     def set(self, key: str, value: Any, expire: Optional[timedelta] = None) -> bool:

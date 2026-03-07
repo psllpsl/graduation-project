@@ -34,7 +34,7 @@ async def get_patient_by_openid(
 @router.get("/", response_model=List[PatientResponse], summary="获取患者列表")
 async def get_patients(
     skip: int = Query(0, ge=0, description="跳过记录数"),
-    limit: int = Query(10, ge=1, le=100, description="返回记录数"),
+    limit: int = Query(100, ge=1, le=1000, description="返回记录数（最大 1000）"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -42,7 +42,7 @@ async def get_patients(
     获取患者列表（支持分页）
 
     - **skip**: 跳过记录数
-    - **limit**: 返回记录数（最大 100）
+    - **limit**: 返回记录数（最大 1000）
     """
     patients = db.query(Patient).offset(skip).limit(limit).all()
     return patients

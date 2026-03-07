@@ -78,7 +78,7 @@ async def patient_chat(
 @router.get("/", response_model=List[DialogueResponse], summary="获取对话记录列表")
 async def get_dialogues(
     skip: int = Query(0, ge=0, description="跳过记录数"),
-    limit: int = Query(10, ge=1, le=100, description="返回记录数"),
+    limit: int = Query(10, ge=1, le=1000, description="返回记录数"),
     patient_id: Optional[int] = Query(None, description="患者 ID 筛选"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -189,16 +189,18 @@ async def get_dialogues_by_session(
     return dialogues
 
 
-@router.post("/{dialogue_id}/handover", response_model=DialogueResponse, summary="标记为人工接管")
+@router.post("/{dialogue_id}/handover", response_model=DialogueResponse, summary="标记/取消人工接管")
 async def mark_handover(
     dialogue_id: int,
+    handover_data: dict = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    将对话标记为需要人工接管
+    标记或取消人工接管
 
-    当 AI 无法妥善处理时，医护人员可以介入处理
+    - 如果 reason 包含"取消"，则取消人工接管
+    - 否则标记为人工接管
     """
     dialogue = db.query(Dialogue).filter(Dialogue.id == dialogue_id).first()
     if not dialogue:
@@ -207,7 +209,13 @@ async def mark_handover(
             detail="对话记录不存在"
         )
 
-    dialogue.is_handover = 1
+    # 检查是否要取消接管
+    reason = handover_data.get("reason", "") if handover_data else ""
+    if "取消" in reason:
+        dialogue.is_handover = 0
+    else:
+        dialogue.is_handover = 1
+
     db.commit()
     db.refresh(dialogue)
     return dialogue
