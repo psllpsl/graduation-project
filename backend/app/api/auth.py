@@ -203,12 +203,13 @@ async def wx_login(
     3. 生成 JWT Token
     """
     # 微信配置（需要在微信公众平台获取）
-    # 测试期间可以使用测试账号的 AppID 和 AppSecret
-    appid = "wx1a83c01a084d00e8"  # 你的小程序 AppID
-    secret = "dfcf6bb92ea5416be5f19ef867dd368b"  # 你的小程序 AppSecret
-    
+    # ⚠️ 重要：请使用你自己的测试账号配置！
+    # 获取测试账号：https://developers.weixin.qq.com/miniprogram/dev/devtools/sandbox.html
+    appid = "wxYOUR_APPID_HERE"  # 替换为你的小程序 AppID
+    secret = "YOUR_SECRET_HERE"  # 替换为你的小程序 AppSecret
+
     # 开发/测试模式：如果未配置真实密钥，使用模拟 openid
-    if appid == "wx4c6b......" or secret == "your-secret-key":
+    if appid == "wxYOUR_APPID_HERE" or secret == "YOUR_SECRET_HERE":
         # 测试模式：使用固定的 openid（基于 code 后 6 位）
         # 注意：这会导致每次登录不同账号，仅用于测试
         openid = "test_openid_" + request.code[-6:] if request.code else "test_openid_123456"
