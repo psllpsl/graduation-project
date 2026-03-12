@@ -40,7 +40,6 @@
 ├── 更新日志.md                 # 版本更新记录
 ├── GITHUB 推送记录.md          # GitHub 推送历史
 ├── .gitignore                 # Git 忽略文件配置
-├── sanitize_for_github.py     # GitHub 脱敏脚本
 ├── stop_all.bat               # 停止所有服务
 ├── reset_test_data.bat        # 重置测试数据
 └── requirements.txt           # 后端依赖
@@ -197,7 +196,6 @@ globalData: {
 | **更新日志.md** | 版本更新记录 |
 | **GITHUB 推送记录.md** | GitHub 推送历史 |
 | **.gitignore** | Git 忽略文件配置 |
-| **sanitize_for_github.py** | GitHub 脱敏脚本 |
 
 ---
 
@@ -222,56 +220,6 @@ reset_test_data.bat
 # 查看 API 文档
 # 浏览器访问：http://localhost:8000/docs
 ```
-
----
-
-## 📦 GitHub 推送指南
-
-### 1. 初始化 Git（如果需要）
-
-```bash
-cd 最终内容
-git init
-git add .
-git commit -m "initial commit: 毕业设计最终版本"
-```
-
-### 2. 关联远程仓库
-
-```bash
-# 关联你的 GitHub 仓库
-git remote add origin https://github.com/你的用户名/你的仓库名.git
-```
-
-### 3. 推送到 GitHub
-
-```bash
-# 推送到 main 分支
-git push -u origin main
-```
-
-### 4. 更新推送
-
-```bash
-# 后续更新
-git add .
-git commit -m "更新说明"
-git push
-```
-
-### 5. 脱敏处理（推送前）
-
-```bash
-# 运行脱敏脚本，移除敏感信息
-python sanitize_for_github.py
-```
-
-### ⚠️ 重要提醒
-
-- **不要上传 `.env` 文件** - 已添加到 `.gitignore`
-- **不要上传真实密码** - 使用占位符
-- **不要上传虚拟环境** - `venv/` 已忽略
-- **检查敏感信息** - 使用 `sanitize_for_github.py` 脱敏
 
 ---
 
