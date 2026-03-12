@@ -65,7 +65,7 @@ Page({
     try {
       // 调用微信登录
       const loginRes = await app.wxLogin()
-      
+
       wx.hideLoading()
 
       if (loginRes && loginRes.access_token) {
@@ -74,13 +74,13 @@ Page({
           icon: 'success'
         })
 
-        // 刷新页面
-        this.loadUserInfo()
+        // 检查信息是否完善，不完善则跳转到完善信息页面
+        this.checkAndRedirect()
       }
     } catch (err) {
       console.error('登录失败:', err)
       wx.hideLoading()
-      
+
       // 显示详细错误信息
       let errorMsg = '请稍后重试'
       if (err && err.errMsg) {
@@ -93,12 +93,34 @@ Page({
       if (err && err.statusCode) {
         errorMsg = `服务器错误：${err.statusCode}`
       }
-      
+
       wx.showModal({
         title: '登录失败',
         content: errorMsg,
         showCancel: false
       })
+    }
+  },
+
+  // 检查信息并跳转
+  async checkAndRedirect() {
+    const token = wx.getStorageSync('token')
+    const userInfo = wx.getStorageSync('userInfo')
+    
+    if (!token || !userInfo) {
+      console.error('Token 或 userInfo 不存在')
+      return
+    }
+    
+    // 检查 phone 字段是否为空
+    if (userInfo.phone) {
+      // 信息已完善，跳转到首页
+      console.log('信息已完善，跳转到首页')
+      wx.reLaunch({ url: '/pages/index/index' })
+    } else {
+      // 信息未完善，跳转到完善信息页面
+      console.log('信息未完善，跳转到完善信息页面')
+      wx.reLaunch({ url: '/pages/complete-info/complete-info' })
     }
   },
 

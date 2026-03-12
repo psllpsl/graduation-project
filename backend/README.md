@@ -1,15 +1,17 @@
 # FastAPI 后端服务
 
 > 牙科修复复诊管理系统的后端 API 服务
+> **版本**：v3.1
+> **最后更新**：2026 年 3 月 12 日
 
 ## 📋 功能特性
 
-- ✅ **用户认证** - JWT Token + bcrypt 密码加密
-- ✅ **患者管理** - CRUD + 筛选 + 微信登录
-- ✅ **复诊管理** - CRUD + 状态更新
-- ✅ **对话管理** - AI 对话 + 人工接管 + 会话管理
-- ✅ **知识库** - CRUD + 分类搜索
-- ✅ **数据统计** - 可视化数据接口
+- ✅ **用户认证** - JWT Token + bcrypt 密码加密 + 微信登录
+- ✅ **患者管理** - CRUD + 筛选 + 微信登录 + 信息完善
+- ✅ **复诊管理** - CRUD + 状态更新 + 患者确认/取消
+- ✅ **对话管理** - AI 对话 + 人工接管 + 删除功能
+- ✅ **知识库** - CRUD + 分类搜索（公开接口）
+- ✅ **数据统计** - 7 个可视化数据接口
 - ✅ **用户管理** - 注册 + 重置密码（需 admin 确认）
 
 ## 🚀 快速开始
@@ -88,30 +90,63 @@ backend/
 
 ## 📞 API 接口
 
-### 认证模块
+### 认证模块（5 个）
 - `POST /api/auth/login` - 用户登录
 - `POST /api/auth/register` - 用户注册（需 admin 确认）
 - `POST /api/auth/reset-password` - 重置密码（需 admin 确认）
+- `POST /api/auth/wx-login` - 微信登录
 - `GET /api/auth/me` - 获取当前用户信息
 
-### 患者管理
+### 患者管理（9 个）
 - `GET /api/patients/` - 获取患者列表
 - `POST /api/patients/` - 创建患者
 - `PUT /api/patients/{id}` - 更新患者
 - `DELETE /api/patients/{id}` - 删除患者
+- `GET /api/patients/search/phone/{phone}` - 按手机号搜索
+- `GET /api/patients/by-openid/{openid}` - 按 openid 查询
+- `POST /api/patients/complete` - 完善个人信息
+- `GET /api/patients/check-complete` - 检查信息是否完善
 
-### 复诊管理
+### 复诊管理（9 个）
 - `GET /api/appointments/` - 获取复诊列表
 - `POST /api/appointments/` - 创建复诊
-- `PATCH /api/appointments/{id}/status` - 更新状态
+- `PUT /api/appointments/{id}` - 更新复诊
 - `DELETE /api/appointments/{id}` - 删除复诊
+- `PATCH /api/appointments/{id}/status` - 更新状态（医护）
+- `PATCH /api/appointments/patient/{id}/status` - 更新状态（患者）
+- `GET /api/appointments/patient/my` - 获取我的复诊
 
-### 对话管理
-- `POST /api/dialogues/` - 创建对话（AI 回复）
+### 对话管理（10 个）
+- `POST /api/dialogues/chat` - 患者对话
+- `POST /api/dialogues/` - 创建对话
 - `GET /api/dialogues/` - 获取对话列表
+- `GET /api/dialogues/session/{session_id}` - 获取会话历史
 - `POST /api/dialogues/{id}/handover` - 标记人工接管
+- `GET /api/dialogues/handover/pending` - 获取待接管对话
+- `DELETE /api/dialogues/{id}` - 删除单条对话
+- `DELETE /api/dialogues/session/{session_id}` - 删除会话
+- `DELETE /api/dialogues/patient/{patient_id}` - 删除患者对话
+- `DELETE /api/dialogues/` - 清空所有对话
+
+### 知识库（7 个）
+- `GET /api/knowledge/` - 获取知识列表
+- `POST /api/knowledge/` - 创建知识
+- `PUT /api/knowledge/{id}` - 更新知识
+- `DELETE /api/knowledge/{id}` - 删除知识
+- `GET /api/knowledge/search/query` - 搜索知识（公开）
+- `GET /api/knowledge/categories` - 获取分类（公开）
+
+### 数据统计（7 个）
+- `GET /api/stats/overview` - 概览统计
+- `GET /api/stats/appointments/trend` - 复诊趋势
+- `GET /api/stats/dialogues/daily` - 对话统计
+- `GET /api/stats/patients/gender` - 性别分布
+- `GET /api/stats/appointments/status` - 状态分布
+- `GET /api/stats/dialogues/types` - 类型统计
+- `GET /api/stats/appointments/compliance` - 依从性统计
 
 ---
 
-**版本**：v3.0  
-**最后更新**：2026-03-07
+**版本**：v3.1
+**最后更新**：2026 年 3 月 12 日
+**API 接口总数**：45+

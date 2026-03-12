@@ -129,50 +129,84 @@ async def get_appointment(
     return appointment
 
 
-@router.patch("/{appointment_id}/status", response_model=AppointmentResponse, summary="更新复诊状态")
+@router.patch("/{appointment_id}/status", response_model=AppointmentResponse, summary="更新复诊状态（医护后台）")
 async def update_appointment_status(
     appointment_id: int,
     status_update: dict,  # 接收 JSON body: {"status": "pending"}
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    更新复诊状态（医护后台专用）
+
+    **权限**：需要医护或管理员权限
+    """
+    # 从 JSON 中提取 status
+    new_status = status_update.get("status")
+    if not new_status:
+        raise HTTPException(
+            status_code=422,
+            detail="缺少 status 参数"
+        )
+
+    appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+    if not appointment:
+        raise HTTPException(
+            status_code=404,
+            detail="复诊计划不存在"
+        )
+
+    # 更新状态
+    appointment.status = new_status
+    db.commit()
+    db.refresh(appointment)
+    return appointment
+
+
+@router.patch("/patient/{appointment_id}/status", response_model=AppointmentResponse, summary="更新复诊状态（患者端）")
+async def update_patient_appointment_status(
+    appointment_id: int,
+    status_update: dict,  # 接收 JSON body: {"status": "confirmed"}
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
     db: Session = Depends(get_db)
 ):
     """
-    更新复诊状态
+    患者更新自己的复诊状态（确认/取消复诊）
 
     **安全机制**：验证 Token 中的 patient_id 与复诊计划的 patient_id 是否匹配
     """
     patient_id = get_patient_id_from_token(credentials)
-    
+
     # 从 JSON 中提取 status
-    status = status_update.get("status")
-    if not status:
+    new_status = status_update.get("status")
+    if not new_status:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=422,
             detail="缺少 status 参数"
         )
 
     if not patient_id:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=401,
             detail="请先登录"
         )
 
     appointment = db.query(Appointment).filter(Appointment.id == appointment_id).first()
     if not appointment:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=404,
             detail="复诊计划不存在"
         )
 
-    # 验证权限
+    # 验证权限：只能修改自己的复诊
     if appointment.patient_id != patient_id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=403,
             detail="无权修改该复诊计划"
         )
 
     # 更新状态
-    appointment.status = status
+    appointment.status = new_status
     db.commit()
     db.refresh(appointment)
     return appointment

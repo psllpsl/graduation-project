@@ -189,11 +189,11 @@ class APIClient:
         params = {"days": days}
         return self._request("GET", f"{BASE_URL}/stats/dialogues/daily", params=params)
 
-    def get_patients_gender(self) -> Dict[str, Any]:
+    def get_patients_gender(self) -> List[Dict[str, Any]]:
         """获取患者性别分布"""
         return self._request("GET", f"{BASE_URL}/stats/patients/gender")
 
-    def get_appointments_status(self) -> Dict[str, Any]:
+    def get_appointments_status(self) -> List[Dict[str, Any]]:
         """获取复诊状态分布"""
         return self._request("GET", f"{BASE_URL}/stats/appointments/status")
 

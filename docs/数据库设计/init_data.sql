@@ -31,20 +31,7 @@ INSERT INTO patients (openid, name, gender, age, phone, medical_history, allergy
 ('oAbCdEfGhIjKlMnOpQrStUvW1', '孙七', '男', 61, '13900139005', '高血压、冠心病', '磺胺类过敏');
 
 -- ============================================
--- 3. 插入治疗记录数据
--- ============================================
-DELETE FROM treatment_records;
-
-INSERT INTO treatment_records (patient_id, treatment_type, treatment_date, tooth_position, material, dentist_id, notes) VALUES
-(1, '固定义齿修复', '2026-01-15', '左上 6', '全瓷牙', 2, '患者恢复良好'),
-(1, '种植牙手术', '2026-02-10', '右下 6', 'ITI 种植体', 2, '手术顺利'),
-(2, '活动义齿修复', '2026-01-20', '上颌', '钴铬合金', 3, '初戴适应中'),
-(3, '固定义齿修复', '2026-02-05', '左下 6、7', '烤瓷牙', 2, '已完成'),
-(4, '种植牙手术', '2026-02-18', '左上 4', '奥齿泰种植体', 3, '术后恢复中'),
-(5, '活动义齿修复', '2026-01-10', '下颌', '纯钛支架', 2, '定期复查');
-
--- ============================================
--- 4. 插入复诊计划数据
+-- 3. 插入复诊计划数据
 -- ============================================
 DELETE FROM appointments;
 
@@ -79,30 +66,14 @@ INSERT INTO knowledge_base (category, title, content, keywords, source) VALUES
 ('常见问题', '什么情况下需要做牙冠修复？', '以下情况建议做牙冠修复：\n1. 牙齿大面积缺损，无法用充填材料修复\n2. 根管治疗后的牙齿，需要保护\n3. 牙齿颜色或形态异常，影响美观\n4. 作为固定义齿的基牙\n5. 种植牙上部修复', '牙冠，适应症，修复', '口腔修复学第 8 版');
 
 -- ============================================
--- 7. 插入系统配置数据
--- ============================================
-DELETE FROM system_config;
-
-INSERT INTO system_config (config_key, config_value, description) VALUES
-('reminder_time', '09:00', '每日复诊提醒发送时间'),
-('reminder_advance_hours', '24', '提前多少小时发送提醒'),
-('ai_max_tokens', '512', 'AI 回复最大 token 数'),
-('ai_temperature', '0.7', 'AI 生成温度参数'),
-('session_timeout_minutes', '30', '会话超时时间（分钟）');
-
--- ============================================
 -- 验证数据
 -- ============================================
 SELECT 'users' AS table_name, COUNT(*) AS row_count FROM users
 UNION ALL
 SELECT 'patients', COUNT(*) FROM patients
 UNION ALL
-SELECT 'treatment_records', COUNT(*) FROM treatment_records
-UNION ALL
 SELECT 'appointments', COUNT(*) FROM appointments
 UNION ALL
 SELECT 'dialogues', COUNT(*) FROM dialogues
 UNION ALL
-SELECT 'knowledge_base', COUNT(*) FROM knowledge_base
-UNION ALL
-SELECT 'system_config', COUNT(*) FROM system_config;
+SELECT 'knowledge_base', COUNT(*) FROM knowledge_base;

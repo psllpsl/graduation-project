@@ -55,29 +55,7 @@ CREATE TABLE `patients` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='患者表';
 
 -- ============================================
--- 表 3：治疗记录表（treatment_records）
--- ============================================
-DROP TABLE IF EXISTS `treatment_records`;
-CREATE TABLE `treatment_records` (
-    `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
-    `patient_id` INT NOT NULL COMMENT '患者 ID',
-    `treatment_type` VARCHAR(50) NOT NULL COMMENT '治疗类型',
-    `treatment_date` DATE NOT NULL COMMENT '治疗日期',
-    `tooth_position` VARCHAR(50) DEFAULT NULL COMMENT '牙位',
-    `material` VARCHAR(100) DEFAULT NULL COMMENT '修复材料',
-    `dentist_id` INT DEFAULT NULL COMMENT '医生 ID',
-    `notes` TEXT COMMENT '治疗备注',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY (`id`),
-    KEY `idx_patient_id` (`patient_id`),
-    KEY `idx_dentist_id` (`dentist_id`),
-    KEY `idx_treatment_date` (`treatment_date`),
-    CONSTRAINT `fk_tr_patient` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_tr_dentist` FOREIGN KEY (`dentist_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='治疗记录表';
-
--- ============================================
--- 表 4：复诊计划表（appointments）
+-- 表 3：复诊计划表（appointments）
 -- ============================================
 DROP TABLE IF EXISTS `appointments`;
 CREATE TABLE `appointments` (
@@ -136,18 +114,3 @@ CREATE TABLE `knowledge_base` (
     KEY `idx_category` (`category`),
     KEY `idx_keywords` (`keywords`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库表';
-
--- ============================================
--- 表 7：系统配置表（system_config）
--- ============================================
-DROP TABLE IF EXISTS `system_config`;
-CREATE TABLE `system_config` (
-    `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键 ID',
-    `config_key` VARCHAR(100) NOT NULL COMMENT '配置键',
-    `config_value` TEXT NOT NULL COMMENT '配置值',
-    `description` VARCHAR(255) DEFAULT NULL COMMENT '配置说明',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_config_key` (`config_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';

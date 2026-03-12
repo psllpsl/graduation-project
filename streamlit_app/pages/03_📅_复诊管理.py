@@ -104,11 +104,13 @@ if st.session_state.get("show_add_appointment"):
         
         if submit:
             try:
+                # 合并日期和时间
+                appointment_datetime = datetime.combine(appointment_date, appointment_time)
+                
                 data = {
                     "patient_id": patient_options[selected_patient],
-                    "appointment_date": appointment_date.strftime("%Y-%m-%d"),
-                    "appointment_time": appointment_time.strftime("%H:%M"),
-                    "treatment_type": treatment_type,
+                    "appointment_date": appointment_datetime.strftime("%Y-%m-%dT%H:%M:%S"),
+                    "appointment_type": treatment_type,
                     "notes": notes
                 }
                 client.create_appointment(data)
@@ -121,49 +123,104 @@ if st.session_state.get("show_add_appointment"):
 # 复诊列表
 if appointments:
     st.subheader("📋 复诊计划列表")
-    
+
+    # 创建患者 ID 到姓名的映射
+    patient_id_to_name = {p["id"]: p["name"] for p in patients}
+
     # 转换为 DataFrame
     df = pd.DataFrame(appointments)
-    
+
+    # 添加患者姓名列
+    df["patient_name"] = df["patient_id"].apply(lambda x: patient_id_to_name.get(x, "未知"))
+
     # 显示表格 - 使用实际存在的列
-    display_columns = ["id", "patient_id", "appointment_date", "status"]
+    display_columns = ["patient_name", "appointment_date", "appointment_type", "status", "notes"]
     available_columns = [col for col in display_columns if col in df.columns]
-    
+
     st.dataframe(
         df[available_columns],
         use_container_width=True,
         column_config={
-            "id": "ID",
-            "patient_id": "患者 ID",
-            "appointment_date": "复诊日期",
-            "status": "状态"
+            "patient_name": st.column_config.TextColumn("患者姓名", width="medium"),
+            "appointment_date": st.column_config.DatetimeColumn("复诊日期", format="YYYY-MM-DD HH:mm"),
+            "appointment_type": st.column_config.TextColumn("复诊类型", width="medium"),
+            "status": st.column_config.TextColumn("状态", width="small"),
+            "notes": st.column_config.TextColumn("备注", width="large")
         },
         hide_index=True
     )
-    
+
     # 操作区域
     st.subheader("🔧 操作")
-    selected_id = st.selectbox(
+    
+    # 创建 (复诊 ID, 患者姓名 + 复诊日期) 映射列表，用于下拉框显示
+    appointment_options = [
+        (a["id"], f"{patient_id_to_name.get(a['patient_id'], '未知')} - {a['appointment_date'][:16]}")
+        for a in appointments
+    ]
+    
+    selected_option = st.selectbox(
         "选择复诊计划进行操作",
-        options=[a["id"] for a in appointments],
-        format_func=lambda x: f"ID: {x}"
+        options=appointment_options,
+        format_func=lambda x: x[1]  # 显示患者姓名和复诊日期
     )
     
+    # 获取选中的复诊 ID
+    selected_id = selected_option[0] if selected_option else None
+
     if selected_id:
         appointment = next((a for a in appointments if a["id"] == selected_id), None)
-        
+
         if appointment:
-            # 显示详情
-            with st.expander("📄 复诊详情"):
+            # 获取患者姓名
+            patient_name = patient_id_to_name.get(appointment["patient_id"], "未知")
+            
+            # 显示详情 - 中文字段名
+            with st.expander(f"📄 复诊详情 - {patient_name}"):
+                # 中文字段映射
+                field_names = {
+                    "id": "复诊 ID",
+                    "patient_id": "患者 ID",
+                    "patient_name": "患者姓名",
+                    "appointment_date": "复诊日期时间",
+                    "appointment_type": "复诊类型",
+                    "status": "当前状态",
+                    "reminder_sent": "已发送提醒",
+                    "reminder_time": "提醒发送时间",
+                    "notes": "备注说明",
+                    "created_at": "创建时间",
+                    "updated_at": "最后更新时间"
+                }
+                
+                # 状态翻译
+                status_map = {
+                    "pending": "📅 待复诊",
+                    "completed": "✅ 已完成",
+                    "cancelled": "❌ 已取消",
+                    "no_show": "⚠️ 未到场"
+                }
+                
                 for key, value in appointment.items():
-                    st.write(f"**{key}**: {value}")
+                    cn_name = field_names.get(key, key)
+                    # 特殊处理状态字段
+                    if key == "status":
+                        value = status_map.get(value, value)
+                    # 特殊处理布尔值
+                    elif key == "reminder_sent":
+                        value = "✅ 是" if value else "❌ 否"
+                    # 格式化时间字段
+                    elif key in ["appointment_date", "reminder_time", "created_at", "updated_at"]:
+                        if value:
+                            value = value.replace("T", " ")[:19] if "T" in str(value) else str(value)[:19]
+                    
+                    st.write(f"**{cn_name}**: {value}")
             
             # 状态更新
-            st.subheader("更新状态")
-            col1, col2, col3, col4 = st.columns(4)
+            st.subheader("🔄 更新状态")
+            col1, col2, col3 = st.columns(3)
 
             with col1:
-                if st.button("📅 待复诊", use_container_width=True):
+                if st.button("📅 待复诊", use_container_width=True, help="设置为待复诊状态"):
                     try:
                         client.update_appointment_status(selected_id, "pending")
                         st.success("更新成功！")
@@ -172,7 +229,7 @@ if appointments:
                         st.error(f"更新失败：{str(e)}")
 
             with col2:
-                if st.button("✅ 已完成", use_container_width=True):
+                if st.button("✅ 已完成", use_container_width=True, help="设置为已完成状态"):
                     try:
                         client.update_appointment_status(selected_id, "completed")
                         st.success("更新成功！")
@@ -181,18 +238,9 @@ if appointments:
                         st.error(f"更新失败：{str(e)}")
 
             with col3:
-                if st.button("❌ 已取消", use_container_width=True):
+                if st.button("❌ 已取消", use_container_width=True, help="设置为已取消状态"):
                     try:
                         client.update_appointment_status(selected_id, "cancelled")
-                        st.success("更新成功！")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"更新失败：{str(e)}")
-
-            with col4:
-                if st.button("⚠️ 未到场", use_container_width=True):
-                    try:
-                        client.update_appointment_status(selected_id, "no_show")
                         st.success("更新成功！")
                         st.rerun()
                     except Exception as e:

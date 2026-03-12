@@ -195,14 +195,43 @@ async def wx_login(
     db: Session = Depends(get_db)
 ):
     """
-    微信小程序登录接口（开发测试版）
+    微信小程序登录接口
     
-    注意：此为测试模式，使用模拟的 openid
-    生产环境请替换为真实的微信 API 调用
+    流程：
+    1. 使用微信 code 调用微信 API 获取 openid
+    2. 根据 openid 查询或创建患者
+    3. 生成 JWT Token
     """
-    # 开发模式：使用模拟的 openid
-    # 使用固定的测试 openid（方便调试）
-    openid = "test_openid_" + request.code[-6:] if request.code else "test_openid_123456"
+    # 微信配置（需要在微信公众平台获取）
+    # 测试期间可以使用测试账号的 AppID 和 AppSecret
+    appid = "wx1a83c01a084d00e8"  # 你的小程序 AppID
+    secret = "dfcf6bb92ea5416be5f19ef867dd368b"  # 你的小程序 AppSecret
+    
+    # 开发/测试模式：如果未配置真实密钥，使用模拟 openid
+    if appid == "wx4c6b......" or secret == "your-secret-key":
+        # 测试模式：使用固定的 openid（基于 code 后 6 位）
+        # 注意：这会导致每次登录不同账号，仅用于测试
+        openid = "test_openid_" + request.code[-6:] if request.code else "test_openid_123456"
+    else:
+        # 生产模式：调用微信 API 获取真实 openid
+        import httpx
+        wx_url = f"https://api.weixin.qq.com/sns/jscode2session?appid={appid}&secret={secret}&js_code={request.code}&grant_type=authorization_code"
+        
+        try:
+            async with httpx.AsyncClient() as client:
+                wx_response = await client.get(wx_url)
+                wx_data = wx_response.json()
+                
+                if "openid" in wx_data:
+                    openid = wx_data["openid"]
+                elif "errcode" in wx_data:
+                    logger.error(f"微信 API 错误：{wx_data}")
+                    raise HTTPException(status_code=400, detail=f"微信登录失败：{wx_data.get('errmsg', '未知错误')}")
+                else:
+                    raise HTTPException(status_code=400, detail="微信 API 响应格式错误")
+        except httpx.RequestError as e:
+            logger.error(f"请求微信 API 失败：{e}")
+            raise HTTPException(status_code=500, detail="无法连接微信服务器")
     
     # 查询或创建患者
     patient = db.query(Patient).filter(Patient.openid == openid).first()
@@ -211,7 +240,7 @@ async def wx_login(
         # 创建新患者
         patient = Patient(
             openid=openid,
-            name=f"用户_{openid[-4:].upper()}",  # 默认昵称，如：用户_A1B2
+            name=f"用户_{openid[-6:].upper()}",  # 默认昵称
             gender=None,
             age=None,
             phone=None,
@@ -222,7 +251,7 @@ async def wx_login(
         db.commit()
         db.refresh(patient)
     
-    # 3. 生成 JWT Token
+    # 生成 JWT Token
     from ..utils.jwt import create_access_token
     from ..config import settings
     
@@ -235,7 +264,7 @@ async def wx_login(
     expire = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data=token_data, expires_delta=expire)
     
-    # 4. 返回结果
+    # 返回结果
     return WxLoginResponse(
         access_token=access_token,
         token_type="bearer",

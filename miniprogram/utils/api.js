@@ -147,17 +147,18 @@ export const patientApi = {
 export const appointmentApi = {
   // 获取我的复诊计划（从 Token 中提取 patient_id）
   getMyList: () => get(`${baseUrl}/appointments/patient/my`),
-  
+
   // 获取复诊详情
   getDetail: (id) => get(`${baseUrl}/appointments/${id}`),
-  
-  // 更新复诊状态
+
+  // 更新复诊状态（患者端专用接口）
   updateStatus: (id, status) => {
     return new Promise((resolve, reject) => {
       const token = wx.getStorageSync('token')
       wx.request({
-        url: `${baseUrl}/appointments/${id}/status?status=${status}`,
+        url: `${baseUrl}/appointments/patient/${id}/status`,  // 使用患者专用接口
         method: 'PATCH',
+        data: { status: status },  // 将 status 放在请求体中
         header: {
           'Content-Type': 'application/json',
           'Authorization': token ? `Bearer ${token}` : ''

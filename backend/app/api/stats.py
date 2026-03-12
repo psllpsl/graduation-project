@@ -36,12 +36,18 @@ async def get_overview_stats(
     today_appointments = db.query(func.count(Appointment.id)).filter(
         func.date(Appointment.appointment_date) == datetime.now().date()
     ).scalar()
-    
+
+    # 昨日复诊数量（用于对比）
+    yesterday = datetime.now().date() - timedelta(days=1)
+    yesterday_appointments = db.query(func.count(Appointment.id)).filter(
+        func.date(Appointment.appointment_date) == yesterday
+    ).scalar()
+
     # 待复诊数量
     pending_appointments = db.query(func.count(Appointment.id)).filter(
         Appointment.status == "pending"
     ).scalar()
-    
+
     # 今日完成复诊
     completed_appointments_today = db.query(func.count(Appointment.id)).filter(
         func.date(Appointment.appointment_date) == datetime.now().date(),
@@ -92,6 +98,7 @@ async def get_overview_stats(
         "new_patients_today": new_patients_today,
         "total_appointments": total_appointments,
         "today_appointments": today_appointments,
+        "yesterday_appointments": yesterday_appointments,  # 昨日复诊数（用于对比）
         "pending_appointments": pending_appointments,
         "completed_appointments_today": completed_appointments_today,
         "total_dialogues": total_dialogues,

@@ -121,14 +121,16 @@ with col1:
 if st.session_state.get("show_add_form"):
     with st.form("add_patient_form"):
         st.subheader("➕ 新增患者")
-        
+
         name = st.text_input("姓名")
         gender = st.selectbox("性别", ["男", "女"])
         age = st.number_input("年龄", min_value=1, max_value=150, value=30)
         phone = st.text_input("手机号")
-        id_card = st.text_input("身份证号")
-        medical_history = st.text_area("病史", placeholder="如有特殊病史请填写")
         
+        st.markdown("**健康信息**")
+        medical_history = st.text_area("既往病史", placeholder="如：高血压、糖尿病、心脏病等（没有填'无'）")
+        allergy_history = st.text_area("过敏史", placeholder="如：青霉素过敏、磺胺类过敏等（没有填'无'）")
+
         col1, col2 = st.columns(2)
         with col1:
             submit = st.form_submit_button("保存", use_container_width=True)
@@ -136,7 +138,7 @@ if st.session_state.get("show_add_form"):
             if st.form_submit_button("取消", use_container_width=True):
                 st.session_state.show_add_form = False
                 st.rerun()
-        
+
         if submit:
             try:
                 data = {
@@ -144,8 +146,8 @@ if st.session_state.get("show_add_form"):
                     "gender": gender,
                     "age": age,
                     "phone": phone,
-                    "id_card": id_card,
-                    "medical_history": medical_history
+                    "medical_history": medical_history if medical_history else "无",
+                    "allergy_history": allergy_history if allergy_history else "无"
                 }
                 client.create_patient(data)
                 st.success("添加成功！")
@@ -179,20 +181,53 @@ if patients:
     
     # 操作区域
     st.subheader("🔧 操作")
-    selected_id = st.selectbox(
+    
+    # 创建 (ID, 姓名) 映射列表，用于下拉框显示
+    patient_options = [(p["id"], f"{p['name']} (ID: {p['id']})") for p in patients]
+    
+    selected_option = st.selectbox(
         "选择患者进行操作",
-        options=[p["id"] for p in patients],
-        format_func=lambda x: f"ID: {x}"
+        options=patient_options,
+        format_func=lambda x: x[1]  # 显示姓名和 ID
     )
     
+    # 获取选中的患者 ID
+    selected_id = selected_option[0] if selected_option else None
+
     if selected_id:
         patient = next((p for p in patients if p["id"] == selected_id), None)
         
         if patient:
-            # 显示详情
+            # 显示详情 - 中文字段名
             with st.expander("📄 患者详情"):
+                # 中文字段映射
+                field_names = {
+                    "id": "患者 ID",
+                    "openid": "微信标识",
+                    "name": "姓名",
+                    "gender": "性别",
+                    "age": "年龄",
+                    "phone": "手机号",
+                    "medical_history": "既往病史",
+                    "allergy_history": "过敏史",
+                    "created_at": "注册时间",
+                    "updated_at": "最后更新"
+                }
+                
                 for key, value in patient.items():
-                    st.write(f"**{key}**: {value}")
+                    cn_name = field_names.get(key, key)
+                    # 特殊处理空值
+                    if value is None or value == "":
+                        value = "未填写"
+                    # 特殊处理性别
+                    elif key == "gender":
+                        value = "男" if value == "男" else "女" if value == "女" else "未填写"
+                    # 格式化时间字段
+                    elif key in ["created_at", "updated_at"]:
+                        if value:
+                            value = str(value)[:19]  # 去掉毫秒
+                    
+                    st.write(f"**{cn_name}**: {value}")
             
             # 编辑按钮
             col1, col2 = st.columns(2)
@@ -228,17 +263,27 @@ if patients:
 if st.session_state.get("edit_patient_id"):
     patient_id = st.session_state.edit_patient_id
     patient = client.get_patient(patient_id)
-    
+
     with st.form("edit_patient_form"):
         st.subheader(f"✏️ 编辑患者 (ID: {patient_id})")
-        
+
         name = st.text_input("姓名", value=patient.get("name", ""))
         gender = st.selectbox("性别", ["男", "女"], index=0 if patient.get("gender") == "男" else 1)
         age = st.number_input("年龄", min_value=1, max_value=150, value=patient.get("age", 30))
         phone = st.text_input("手机号", value=patient.get("phone", ""))
-        id_card = st.text_input("身份证号", value=patient.get("id_card", ""))
-        medical_history = st.text_area("病史", value=patient.get("medical_history", ""))
         
+        st.markdown("**健康信息**")
+        medical_history = st.text_area(
+            "既往病史", 
+            value=patient.get("medical_history", "") if patient.get("medical_history") != "无" else "",
+            placeholder="如：高血压、糖尿病、心脏病等"
+        )
+        allergy_history = st.text_area(
+            "过敏史", 
+            value=patient.get("allergy_history", "") if patient.get("allergy_history") != "无" else "",
+            placeholder="如：青霉素过敏、磺胺类过敏等"
+        )
+
         col1, col2 = st.columns(2)
         with col1:
             submit = st.form_submit_button("保存修改", use_container_width=True)
@@ -246,7 +291,7 @@ if st.session_state.get("edit_patient_id"):
             if st.form_submit_button("取消", use_container_width=True):
                 st.session_state.edit_patient_id = None
                 st.rerun()
-        
+
         if submit:
             try:
                 data = {
@@ -254,8 +299,8 @@ if st.session_state.get("edit_patient_id"):
                     "gender": gender,
                     "age": age,
                     "phone": phone,
-                    "id_card": id_card,
-                    "medical_history": medical_history
+                    "medical_history": medical_history if medical_history else "无",
+                    "allergy_history": allergy_history if allergy_history else "无"
                 }
                 client.update_patient(patient_id, data)
                 st.success("更新成功！")

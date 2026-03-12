@@ -66,28 +66,37 @@ with col1:
     st.metric(
         label="👥 患者总数",
         value=stats.get("total_patients", 0) if isinstance(stats, dict) else 0,
-        delta=stats.get("new_patients_today", 0) if isinstance(stats, dict) else 0
+        delta=stats.get("new_patients_today", 0) if isinstance(stats, dict) else 0,
+        delta_color="normal"
     )
 
 with col2:
+    # 今日复诊的 delta 显示与昨天的对比
+    today_appointments = stats.get("today_appointments", 0) if isinstance(stats, dict) else 0
+    yesterday_appointments = stats.get("yesterday_appointments", 0) if isinstance(stats, dict) else 0
+    appointments_delta = today_appointments - yesterday_appointments if yesterday_appointments > 0 else 0
+    
     st.metric(
         label="📅 今日复诊",
-        value=stats.get("today_appointments", 0) if isinstance(stats, dict) else 0,
-        delta=stats.get("completed_appointments_today", 0) if isinstance(stats, dict) else 0
+        value=today_appointments,
+        delta=appointments_delta if appointments_delta != 0 else None,  # 无变化时不显示箭头
+        delta_color="normal"
     )
 
 with col3:
     st.metric(
         label="💬 今日对话",
         value=stats.get("today_dialogues", 0) if isinstance(stats, dict) else 0,
-        delta=f"{stats.get('dialogue_growth_rate', 0)}%" if isinstance(stats, dict) else "0%"
+        delta=f"{stats.get('dialogue_growth_rate', 0)}%" if isinstance(stats, dict) else "0%",
+        delta_color="normal"
     )
 
 with col4:
     st.metric(
         label="📚 知识条目",
         value=stats.get("total_knowledge", 0) if isinstance(stats, dict) else 0,
-        delta=stats.get("new_knowledge_this_week", 0) if isinstance(stats, dict) else 0
+        delta=stats.get("new_knowledge_this_week", 0) if isinstance(stats, dict) else 0,
+        delta_color="normal"
     )
 
 st.divider()
@@ -274,11 +283,20 @@ col1, col2 = st.columns(2)
 with col1:
     st.subheader("👥 患者性别分布")
     if isinstance(patients_gender, list) and len(patients_gender) > 0:
+        # 性别翻译
+        gender_map = {"male": "男", "female": "女", "未知": "未知"}
+        
         fig = px.pie(
             values=[item.get("count", 0) for item in patients_gender],
-            names=[item.get("gender", "未知") for item in patients_gender],
+            names=[gender_map.get(item.get("gender", "未知"), item.get("gender", "未知")) for item in patients_gender],
             color_discrete_sequence=px.colors.qualitative.Set3
         )
+        
+        # 自定义悬停提示，显示中文
+        fig.update_traces(
+            hovertemplate="<b>%{label}</b><br>人数：%{value}<extra></extra>"
+        )
+        
         fig.update_layout(height=300)
         st.plotly_chart(fig, use_container_width=True)
     else:
@@ -287,11 +305,25 @@ with col1:
 with col2:
     st.subheader("📅 复诊状态分布")
     if isinstance(appointments_status, list) and len(appointments_status) > 0:
+        # 状态翻译
+        status_map = {
+            "pending": "📅 待复诊",
+            "completed": "✅ 已完成",
+            "cancelled": "❌ 已取消",
+            "no_show": "⚠️ 未到场"
+        }
+        
         fig = px.pie(
             values=[item.get("count", 0) for item in appointments_status],
-            names=[item.get("status", "未知") for item in appointments_status],
+            names=[status_map.get(item.get("status", "未知"), item.get("status", "未知")) for item in appointments_status],
             color_discrete_sequence=px.colors.qualitative.Pastel
         )
+        
+        # 自定义悬停提示，显示中文
+        fig.update_traces(
+            hovertemplate="<b>%{label}</b><br>数量：%{value}<extra></extra>"
+        )
+        
         fig.update_layout(height=300)
         st.plotly_chart(fig, use_container_width=True)
     else:

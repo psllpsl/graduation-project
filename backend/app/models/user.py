@@ -25,7 +25,7 @@ class User(Base):
     )
 
     # 关联关系
-    treatment_records = relationship("TreatmentRecord", back_populates="dentist")
+    # treatment_records 已删除
 
     def __repr__(self):
         return f"<User(id={self.id}, username={self.username})>"

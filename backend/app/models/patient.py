@@ -15,7 +15,6 @@ class Patient(Base):
     gender = Column(String(10), nullable=True, comment="性别")
     age = Column(Integer, nullable=True, comment="年龄")
     phone = Column(String(20), nullable=True, index=True, comment="手机号")
-    id_card = Column(String(18), nullable=True, comment="身份证号")
     medical_history = Column(Text, nullable=True, comment="既往病史")
     allergy_history = Column(Text, nullable=True, comment="过敏史")
     created_at = Column(DateTime, nullable=False, default=datetime.now, comment="注册时间")
@@ -28,7 +27,6 @@ class Patient(Base):
     )
 
     # 关联关系
-    treatment_records = relationship("TreatmentRecord", back_populates="patient", cascade="all, delete-orphan")
     appointments = relationship("Appointment", back_populates="patient", cascade="all, delete-orphan")
     dialogues = relationship("Dialogue", back_populates="patient", cascade="all, delete-orphan")
 
