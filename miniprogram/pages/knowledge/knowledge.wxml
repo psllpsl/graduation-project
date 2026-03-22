@@ -41,7 +41,7 @@
   <!-- 知识列表 -->
   <view class="knowledge-list">
     <!-- 加载中 -->
-    <view class="loading" wx:if="{{loading}}">
+    <view class="loading" wx:if="{{loading && knowledgeList.length === 0}}">
       <view class="loading-text">加载中...</view>
     </view>
 
@@ -52,26 +52,38 @@
     </view>
 
     <!-- 知识卡片 -->
-    <view 
-      class="knowledge-card" 
-      wx:for="{{knowledgeList}}" 
-      wx:key="id"
-      bindtap="onKnowledgeTap"
-      data-item="{{item}}"
-    >
-      <view class="card-header">
-        <view class="category-tag">{{item.category}}</view>
-        <view class="source" wx:if="{{item.source}}">{{item.source}}</view>
-      </view>
-      <view class="card-title">{{item.title}}</view>
-      <view class="card-summary">{{item.content}}</view>
-      <view class="card-footer">
-        <view class="keywords" wx:if="{{item.keywords}}">
-          <text class="keyword" wx:for="{{item.keywords.split(',')}}" wx:key="*this" wx:for-item="keyword">
-            #{{keyword.trim()}}
-          </text>
+    <block wx:else>
+      <view
+        class="knowledge-card"
+        wx:for="{{knowledgeList}}"
+        wx:key="id"
+        bindtap="onKnowledgeTap"
+        data-item="{{item}}"
+      >
+        <view class="card-header">
+          <view class="category-tag">{{item.category}}</view>
+          <view class="source" wx:if="{{item.source}}">{{item.source}}</view>
+        </view>
+        <view class="card-title">{{item.title}}</view>
+        <view class="card-summary">{{item.content}}</view>
+        <view class="card-footer">
+          <view class="keywords" wx:if="{{item.keywords}}">
+            <text class="keyword" wx:for="{{item.keywords.split(',')}}" wx:key="*this" wx:for-item="keyword">
+              #{{keyword.trim()}}
+            </text>
+          </view>
         </view>
       </view>
-    </view>
+
+      <!-- 加载更多提示 -->
+      <view class="loading-more" wx:if="{{loadingMore}}">
+        <view class="loading-text">加载中...</view>
+      </view>
+      
+      <!-- 没有更多数据 -->
+      <view class="no-more" wx:elif="{{!hasMore && knowledgeList.length > 0}}">
+        <view class="no-more-text">— 已经到底了 —</view>
+      </view>
+    </block>
   </view>
 </view>

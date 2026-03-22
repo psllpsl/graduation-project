@@ -168,3 +168,25 @@
   font-size: 28rpx;
   color: #999;
 }
+
+/* 加载更多 */
+.loading-more {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40rpx 0;
+}
+
+/* 没有更多数据 */
+.no-more {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40rpx 0;
+}
+
+.no-more-text {
+  font-size: 24rpx;
+  color: #ccc;
+  text-align: center;
+}

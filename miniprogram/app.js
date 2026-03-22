@@ -1,4 +1,4 @@
-// app.js
+﻿// app.js
 App({
   onLaunch() {
     // 小程序启动时执行
@@ -17,7 +17,7 @@ App({
     // 模拟器使用：http://localhost:8000/api
     // 真机调试使用：http://你的电脑 IP:8000/api
     // 当前配置：192.168.0.103（请根据实际网络环境修改）
-    baseUrl: 'http://192.168.0.103:8000/api',
+    baseUrl: 'http://192.168.118.1:8000/api',
     // 会话 ID（用于多轮对话）
     sessionId: null
   },

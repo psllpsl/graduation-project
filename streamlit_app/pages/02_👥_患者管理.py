@@ -259,54 +259,59 @@ if patients:
                         st.session_state.deleting_patient_id = selected_id
                         st.rerun()
 
-# 编辑患者表单
-if st.session_state.get("edit_patient_id"):
-    patient_id = st.session_state.edit_patient_id
-    patient = client.get_patient(patient_id)
+    # 编辑患者表单（在有患者数据时显示）
+    if st.session_state.get("edit_patient_id"):
+        patient_id = st.session_state.edit_patient_id
+        patient = client.get_patient(patient_id)
 
-    with st.form("edit_patient_form"):
-        st.subheader(f"✏️ 编辑患者 (ID: {patient_id})")
+        with st.form("edit_patient_form"):
+            st.subheader(f"✏️ 编辑患者 (ID: {patient_id})")
 
-        name = st.text_input("姓名", value=patient.get("name", ""))
-        gender = st.selectbox("性别", ["男", "女"], index=0 if patient.get("gender") == "男" else 1)
-        age = st.number_input("年龄", min_value=1, max_value=150, value=patient.get("age", 30))
-        phone = st.text_input("手机号", value=patient.get("phone", ""))
-        
-        st.markdown("**健康信息**")
-        medical_history = st.text_area(
-            "既往病史", 
-            value=patient.get("medical_history", "") if patient.get("medical_history") != "无" else "",
-            placeholder="如：高血压、糖尿病、心脏病等"
-        )
-        allergy_history = st.text_area(
-            "过敏史", 
-            value=patient.get("allergy_history", "") if patient.get("allergy_history") != "无" else "",
-            placeholder="如：青霉素过敏、磺胺类过敏等"
-        )
+            name = st.text_input("姓名", value=patient.get("name", ""))
+            gender = st.selectbox("性别", ["男", "女"], index=0 if patient.get("gender") == "男" else 1)
+            age = st.number_input("年龄", min_value=1, max_value=150, value=patient.get("age", 30))
+            phone = st.text_input("手机号", value=patient.get("phone", ""))
 
-        col1, col2 = st.columns(2)
-        with col1:
-            submit = st.form_submit_button("保存修改", use_container_width=True)
-        with col2:
-            if st.form_submit_button("取消", use_container_width=True):
-                st.session_state.edit_patient_id = None
-                st.rerun()
+            st.markdown("**健康信息**")
+            medical_history = st.text_area(
+                "既往病史",
+                value=patient.get("medical_history", "") if patient.get("medical_history") != "无" else "",
+                placeholder="如：高血压、糖尿病、心脏病等"
+            )
+            allergy_history = st.text_area(
+                "过敏史",
+                value=patient.get("allergy_history", "") if patient.get("allergy_history") != "无" else "",
+                placeholder="如：青霉素过敏、磺胺类过敏等"
+            )
 
-        if submit:
-            try:
-                data = {
-                    "name": name,
-                    "gender": gender,
-                    "age": age,
-                    "phone": phone,
-                    "medical_history": medical_history if medical_history else "无",
-                    "allergy_history": allergy_history if allergy_history else "无"
-                }
-                client.update_patient(patient_id, data)
-                st.success("更新成功！")
-                st.session_state.edit_patient_id = None
-                st.rerun()
-            except Exception as e:
-                st.error(f"更新失败：{str(e)}")
+            col1, col2 = st.columns(2)
+            with col1:
+                submit = st.form_submit_button("保存修改", use_container_width=True)
+            with col2:
+                if st.form_submit_button("取消", use_container_width=True):
+                    st.session_state.edit_patient_id = None
+                    st.rerun()
+
+            if submit:
+                try:
+                    data = {
+                        "name": name,
+                        "gender": gender,
+                        "age": age,
+                        "phone": phone,
+                        "medical_history": medical_history if medical_history else "无",
+                        "allergy_history": allergy_history if allergy_history else "无"
+                    }
+                    client.update_patient(patient_id, data)
+                    st.success("更新成功！")
+                    st.session_state.edit_patient_id = None
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"更新失败：{str(e)}")
+
 else:
-    st.info("暂无患者数据")
+    # 患者列表为空时显示提示
+    st.info("📭 暂无患者数据，点击上方'新增患者'按钮添加")
+    if st.button("➕ 现在添加"):
+        st.session_state.show_add_form = True
+        st.rerun()

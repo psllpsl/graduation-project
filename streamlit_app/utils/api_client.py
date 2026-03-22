@@ -27,13 +27,33 @@ class APIClient:
 
         try:
             response = requests.request(method, url, **kwargs)
-            response.raise_for_status()
+            
+            # 处理常见错误状态码
+            if response.status_code == 401:
+                try:
+                    error_data = response.json()
+                    error_msg = error_data.get("detail", "认证失败")
+                except:
+                    error_msg = "认证失败，请检查账号密码"
+                raise Exception(error_msg)
+            elif response.status_code == 403:
+                raise Exception("权限不足，无法执行此操作")
+            elif response.status_code == 404:
+                raise Exception("请求的资源不存在")
+            elif response.status_code >= 400:
+                try:
+                    error_data = response.json()
+                    error_msg = error_data.get("detail", f"请求失败 ({response.status_code})")
+                except:
+                    error_msg = f"请求失败 ({response.status_code})"
+                raise Exception(error_msg)
+            
             # 204 No Content 没有返回值
             if response.status_code == 204:
                 return None
             return response.json()
         except requests.exceptions.RequestException as e:
-            raise Exception(f"API 请求失败：{str(e)}")
+            raise Exception(f"网络请求失败：{str(e)}")
 
     # ==================== 认证相关 ====================
 

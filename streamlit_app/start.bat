@@ -7,29 +7,19 @@ echo.
 
 cd /d "%~dp0"
 
-echo [1/3] Checking virtual environment...
+echo [检查] 检查虚拟环境...
 if not exist "venv" (
-    echo Creating virtual environment...
+    echo 创建虚拟环境中...
     python -m venv venv
-    echo Installing dependencies...
+    echo 安装依赖中...
     call venv\Scripts\activate.bat
     pip install -r requirements.txt
 ) else (
-    echo Virtual environment exists
+    echo 虚拟环境已存在
 )
 
 echo.
-echo [2/3] Activating virtual environment...
-call venv\Scripts\activate.bat
-
-echo.
-echo [3/3] Starting Streamlit application...
-echo Browser will open http://localhost:8501
-echo Press Ctrl+C to stop
-echo.
-echo ========================================
+echo [启动] 启动 Streamlit 应用...
 echo.
 
-streamlit run app.py
-
-pause
+python start_streamlit.py

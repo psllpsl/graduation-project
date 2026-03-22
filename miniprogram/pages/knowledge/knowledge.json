@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "术后知识",
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "onReachBottomDistance": 50
 }

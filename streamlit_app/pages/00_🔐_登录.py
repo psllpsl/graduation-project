@@ -43,7 +43,16 @@ if submit:
                 st.rerun()
 
             except Exception as e:
-                st.error(f"登录失败：{str(e)}")
+                error_msg = str(e)
+                # 根据错误类型显示友好提示
+                if "认证失败" in error_msg or "账号密码" in error_msg:
+                    st.error("🔐 账号或密码错误，请重试")
+                elif "权限不足" in error_msg:
+                    st.error("⚠️ 权限不足，无法登录")
+                elif "网络请求失败" in error_msg:
+                    st.error("🌐 无法连接服务器，请检查后端服务是否启动")
+                else:
+                    st.error(f"登录失败：{error_msg}")
 
 # 页脚
 st.divider()
